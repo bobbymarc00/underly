@@ -54,8 +54,8 @@ Uses exact `tokenAmount` when supplied, or the same `amountUsd` fallback derivat
 
 ## Execution Explainability — included in schema v0.1
 BUY now exposes three separate measurements:
-1. entry â€” requested notional vs current RWA-price-marked value of acquired tokens;
-2. exit â€” marked value of acquired tokens vs current executable reverse-sell proceeds;
-3. roundTrip â€” requested notional vs current reverse-sell recovery.
+1. entry — requested notional vs current RWA-price-marked value of acquired tokens;
+2. exit — marked value of acquired tokens vs current executable reverse-sell proceeds;
+3. roundTrip — requested notional vs current reverse-sell recovery.
 
 SELL and COLLATERAL expose a direct exit/liquidation breakdown against the requested position notional. HOLD performs no execution probe.

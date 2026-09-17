@@ -2,7 +2,7 @@
 
 **Know what you really hold.**
 
-Underly is a zero-install tokenized-equity inspection layer for BNB Smart Chain. It combines asset identity, wrapper metadata, token/reference pricing, session state, current execution diagnostics and conservative valuation into one read-only API response.
+Underly is a read-only tokenized-equity inspection and market-intelligence layer for BNB Smart Chain. The frozen v0.1 firewall contract remains intact while v0.2 adds provider-agnostic market data, company/fundamental evidence, liquidity observations, corporate-action history, contextual news, and public-address wallet inspection.
 
 ## Quick start
 
@@ -14,7 +14,7 @@ npm install
 
 ### 2. Configure
 
-Copy `.env.example` to `.env.local` and fill in your Binance Web3 Developer credentials.
+Copy `.env.example` to `.env.local`.
 
 PowerShell:
 
@@ -28,7 +28,7 @@ Linux/macOS:
 cp .env.example .env.local
 ```
 
-Required:
+Core Binance Web3 configuration:
 
 ```env
 BINANCE_WEB3_API_KEY=...
@@ -37,7 +37,15 @@ UNDERLY_QUOTE_WALLET=0xYOUR_PUBLIC_BSC_WALLET
 UNDERLY_CHAIN_ID=56
 ```
 
-`UNDERLY_QUOTE_WALLET` is a **public address only** used for Binance RFQ context. No seed phrase or private key is used by v0.1.
+Optional/enrichment configuration:
+
+```env
+UNDERLY_NEWS_PROVIDER=alpha_vantage
+ALPHAVANTAGE_API_KEY=...
+UNDERLY_RPC_URL=https://YOUR_BSC_RPC
+```
+
+`UNDERLY_QUOTE_WALLET` and wallet-inspector input addresses are **public addresses only**. Underly never requests or uses a seed phrase or private key.
 
 ### 3. Run
 
@@ -45,46 +53,69 @@ UNDERLY_CHAIN_ID=56
 npm run dev
 ```
 
-Open http://localhost:3000.
+Open `http://localhost:3000`.
 
-## Test API
+## Frozen/additive API surface
+
+The v0.1 firewall remains frozen:
+
+```text
+POST /api/firewall/check
+GET  /api/search
+```
+
+The v0.2 market-data foundation is additive:
+
+```text
+GET /api/universe
+GET /api/market-history
+GET /api/company
+GET /api/liquidity
+GET /api/corporate-actions
+GET /api/corporate-actions/history
+GET /api/news
+GET /api/wallet-inspector
+```
+
+See `docs/API_V0.2.md` and `docs/SCHEMA_FREEZE_V0.2.md`.
+
+## Read-only boundary
+
+Underly may request signed **read-only Binance Web3 data/quote endpoints** and public EVM JSON-RPC reads. It does not expose or perform:
+
+- swap/trade execution
+- token approvals
+- transaction signing
+- transaction broadcast
+- private-key or seed-phrase handling
+
+The wallet inspector uses only `eth_chainId`, `eth_blockNumber`, and `eth_call`, and inspects only wrapper contracts present in the Binance Web3 RWA universe.
+
+## Historical chart safety
+
+Current token/share-ratio direction is live-verified, but historical ratio continuity is not. Therefore the frozen historical chart modes are:
+
+- raw token price
+- indexed 100
+
+A historical share-adjusted mode is intentionally deferred until ratio continuity or timestamped ratio history is evidenced.
+
+## Validation
 
 ```bash
-curl -X POST http://localhost:3000/api/firewall/check \
-  -H 'Content-Type: application/json' \
-  -d '{"ticker":"NVDA","intent":"BUY","amountUsd":"1000"}'
+npm test
+npm run build
 ```
 
-PowerShell:
-
-```powershell
-Invoke-RestMethod -Method Post `
-  -Uri http://localhost:3000/api/firewall/check `
-  -ContentType 'application/json' `
-  -Body '{"ticker":"NVDA","intent":"BUY","amountUsd":"1000"}'
-```
+The v0.2 freeze adds a static regression test that guards the read-only execution boundary and blank secret placeholders.
 
 ## Vercel
 
-Add the same environment variables in Vercel Project Settings â†’ Environment Variables. **Never** rename Binance secrets to `NEXT_PUBLIC_*`.
+Add required environment variables in **Vercel Project Settings → Environment Variables**. Never rename server secrets to `NEXT_PUBLIC_*`.
 
-## Security
+## Security notes
 
-- Binance credentials are imported only from modules marked `server-only`.
-- v0.1 does not sign wallet transactions or broadcast trades.
-- `.env*` local secrets are gitignored.
-
-## Execution semantics
-
-Underly v0.1 is intent-aware:
-
-- `BUY` — current entry quote + full reverse liquidity probe.
-- `HOLD` — no synthetic execution.
-- `SELL` — direct current exit quote using exact `tokenAmount` when supplied, otherwise an `amountUsd` fallback.
-- `COLLATERAL` — direct current liquidation-value analysis using the same quantity semantics.
-
-Execution diagnostics measure current conditions, not predicted future return.
-
-Underly is read-only and does not discover wallet holdings, sign transactions, approve tokens, or broadcast trades.
-
-See `docs/PRODUCT_SPEC.md`, `docs/API.md`, and `docs/DX_LOG.md`.
+- Binance credentials are consumed only from server-side modules.
+- `.env`, `.env.local`, and `.env.*.local` are gitignored.
+- RPC URLs are not returned in wallet-inspector responses because provider URLs may contain credentials.
+- Missing upstream evidence is not silently converted into a PASS, zero holding, fabricated event, or generated article.

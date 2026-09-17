@@ -1,4 +1,4 @@
-﻿node_modules
+node_modules
 .next
 .vercel
 
@@ -18,4 +18,5 @@ Thumbs.db
 
 .underly-patch-backups
 .underly-last-patch-backup.txt
+*.v*-backup-*
 .kilo

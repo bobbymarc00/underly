@@ -1,144 +1,110 @@
 # Underly v0.2 Roadmap — Market Data Foundation
 
-Status: PLANNED / incremental implementation
+Status: **FOUNDATION IMPLEMENTED / FREEZE CANDIDATE**
 
-Underly v0.1 remains frozen and production-stable. v0.2 expands the product beside the existing `/api/firewall/check` contract rather than silently changing it.
+Underly v0.1 remains frozen and production-stable. v0.2 expands beside `/api/firewall/check` rather than changing that contract.
 
 ## Product direction
 
-Underly is evolving from a single inspection response into a read-only tokenized-equity market and wrapper intelligence product.
-
-The final product should feel closer to a stock-exchange / market terminal than a generic crypto dashboard, while preserving the original principle:
+Underly is a read-only tokenized-equity market, wrapper, evidence, and public-wallet intelligence product.
 
 > Know what you really hold.
 
-## Milestone order
+## Completed foundation
 
-### 1. Wrapper Universe
+### 1. Wrapper Universe — COMPLETE
 
-Goal: discover every wrapper/provider Binance Web3 currently exposes for the configured chain without assuming the provider set is permanently limited to Ondo and bStocks.
+`GET /api/universe`
 
-Planned contract:
-
-- `GET /api/universe`
-- provider list derived from live upstream data
+- dynamic provider discovery
 - underlying-to-wrapper grouping
 - provider/wrapper counts
-- contract, symbol, chain, decimals and token/share-ratio metadata
-- deterministic ordering
-- unknown/future provider IDs are retained, not discarded
+- contract/symbol/chain/decimals/token-share-ratio metadata
+- unknown provider IDs retained
 
-The frozen v0.1 `platform` filter remains unchanged for compatibility.
+### 2. Historical Market Data — COMPLETE FOR SAFE MODES
 
-### 2. Historical Market Data
+`GET /api/market-history`
 
-Required before the final chart UI.
-
-Goals:
-
-- historical observations/candles per wrapper when supported
-- common timestamps and interval normalization
-- explicit missing-data handling
-- no invented interpolation
-- provider coverage recorded independently
-- underlying/reference series kept distinct from wrapper series
-
-Target chart modes:
+Frozen safe modes:
 
 - raw wrapper token price
-- share-adjusted comparison, only after token/share-ratio semantics are explicitly verified
-- indexed-to-100 comparison for relative tracking
+- indexed-to-100 comparison
 
-### 3. Company Profile & Fundamentals
+Historical share-adjusted comparison is **not** frozen because current ratio direction is verified but historical ratio continuity is not.
 
-Target fields when supported by authoritative sources:
+### 3. Company Profile & Fundamentals — COMPLETE FOUNDATION
 
-- company name
-- ticker
-- description
-- industry / sector
-- website
-- market capitalization
-- 52-week high / low
-- volume / average daily volume
-- P/E
-- P/B
-- dividend yield
-- latest dividend data
+`GET /api/company`
 
-Unavailable fields remain `null` / `UNKNOWN`; the UI must not manufacture a PASS.
+Evidence-aware company and fundamental fields with explicit consensus/conflict/unknown semantics.
 
-### 4. Wrapper Liquidity Intelligence
+### 4. Wrapper Liquidity Intelligence — COMPLETE FOUNDATION
 
-Separate current market liquidity from company fundamentals.
+`GET /api/liquidity`
 
-Target dimensions:
+Current standardized same-notional entry/reverse quote observations, vendor and friction evidence. Live outcomes remain time/size/session dependent and are never frozen values.
 
-- current route availability
-- quote vendor
-- entry/exit availability
-- execution friction
-- current executable/liquidation value
-- wrapper market/on-chain volume when supported
-- optional standardized read-only probe sizes after rate-limit and semantics validation
+### 5. Dividends & Corporate Actions — COMPLETE CURRENT + DIVIDEND/SPLIT HISTORY
 
-Execution findings remain deterministic backend logic.
+`GET /api/corporate-actions`
 
-### 5. Dividends & Corporate Actions
+Current ActionGuard/session + dividend snapshot.
 
-Keep two concepts separate:
+`GET /api/corporate-actions/history`
 
-- **ActionGuard**: current trading restriction classification (`CLEAR | ACTIVE | UNKNOWN`)
-- **Corporate-action timeline**: dividends, splits, mergers, symbol changes, suspensions or other explicit events when authoritative evidence exists
+Historical provider-neutral dividends and stock splits with raw evidence.
 
-Future reconciliation may compare whether wrappers reflect the same event as the underlying:
+Deferred until authoritative evidence exists:
 
-- `MATCH`
-- `MISMATCH`
-- `UNKNOWN`
+- mergers/reorganizations
+- symbol changes/suspensions history
+- historical wrapper-vs-underlying reconciliation
 
-### 6. Related News
+### 6. Related News — COMPLETE FOUNDATION
 
-News is a separate evidence layer and must not be embedded into the Binance adapter unless Binance exposes a suitable authoritative endpoint.
+`GET /api/news`
 
-Use a provider abstraction such as:
+Provider abstraction, shared cached market snapshot, market scope, and exact-ticker evidence filtering.
 
-```text
-NewsProvider
-  getCompanyNews(ticker)
-```
+### 7. Read-only Wallet Inspector — COMPLETE FOUNDATION
 
-Every item should preserve:
+`GET /api/wallet-inspector`
 
-- source
-- published timestamp
-- headline
-- URL
-- category when available
+- public address only
+- Binance RWA universe defines inspectable wrapper contracts
+- same-block ERC-20 `balanceOf`
+- raw + normalized quantity evidence
+- no seed phrase/private key/signing/approval/broadcast
 
-Do not generate fictional news items.
+## Deferred layers
 
-### 7. Read-only Wallet Inspector
+### Proof v2 / Agent Layer
 
-After the market-data foundation is stable:
-
-- user supplies a public wallet address
-- detect matching tokenized-equity holdings
-- map holdings into the wrapper universe
-- run the same inspection/data views against actual quantities
-
-No seed phrase, private key, token approval, signing or transaction broadcast.
-
-### 8. Proof v2 / Agent Layer
-
-Later milestones:
+Deferred beyond the v0.2 market-data freeze:
 
 - stronger canonical proof serialization
-- explicit source manifest
-- deterministic local verification tooling
+- cross-endpoint source manifest
+- standalone deterministic verification tooling
 - optional on-chain proof anchoring
-- agent-friendly inspection / x402 only after the underlying data contracts are stable
+- agent/x402 surfaces
+
+## Next milestone
+
+### Final stock-exchange UI
+
+The backend foundation is now ready for the final market-terminal UI, subject to the freeze-candidate regression/build validation.
+
+The UI must consume normalized backend contracts and must not:
+
+- recompute risk findings
+- infer PASS from missing evidence
+- create write capabilities
+- fabricate news or corporate actions
+- silently apply today's token/share ratio across historical candles
+
+Historical chart modes exposed by the frozen backend are raw and indexed-100. Share-adjusted historical visualization remains deferred until ratio continuity is evidenced.
 
 ## Non-goal
 
-Real swap/trade execution is not part of this roadmap. Underly remains a read-only inspection and intelligence layer unless a future product decision explicitly changes that boundary.
+Real swap/trade execution is not part of the v0.2 product boundary.
