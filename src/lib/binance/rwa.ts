@@ -24,39 +24,80 @@ export interface RwaPriceRow {
   referencePriceUpdatedAt?: number | string;
 }
 
+export interface RwaStatusInfo {
+  openState?: boolean;
+  marketStatus?: string | null;
+  reasonCode?: string | null;
+  reasonMsg?: string | null;
+  nextOpenTime?: number | null;
+  nextCloseTime?: number | null;
+}
+
+export interface RwaUnderlyingMarketFields {
+  referencePrice?: string | number | null;
+  high52W?: string | number | null;
+  low52W?: string | number | null;
+  volumeShares24H?: string | number | null;
+  avgDailyVolume1Y?: string | number | null;
+  totalShares?: string | number | null;
+  marketCap?: string | number | null;
+  turnoverRate?: string | number | null;
+  amplitude?: string | number | null;
+  peRatioTTM?: string | number | null;
+  pbRatio?: string | number | null;
+  dividendYield?: string | number | null;
+  latestDividend?: string | number | null;
+  [key: string]: string | number | null | undefined;
+}
+
 export interface RwaMarketData {
   binanceChainId?: string;
   tokenContractAddress?: string;
   platformId?: string;
   assetType?: number;
-  statusInfo?: {
-    openState?: boolean;
-    marketStatus?: string | null;
-    reasonCode?: string | null;
-    reasonMsg?: string | null;
-    nextOpenTime?: number | null;
-    nextCloseTime?: number | null;
-  };
-  marketData?: Record<string, string | number | null>;
+  statusInfo?: RwaStatusInfo;
+  marketData?: RwaUnderlyingMarketFields;
+}
+
+export interface RwaCompanyInfo {
+  ceo?: string | null;
+  website?: string | null;
+  industry?: string | null;
+  conceptsEn?: string[] | null;
+  conceptsCn?: string[] | null;
+  descriptionEn?: string | null;
+  descriptionZh?: string | null;
 }
 
 export interface RwaProfile {
+  binanceChainId?: string;
+  tokenContractAddress?: string;
+  platformId?: string;
   underlyingTicker?: string;
   underlyingFullName?: string;
+  assetType?: number;
   tokenToShareRatio?: string;
   protections?: {
     dailyAttestationReport?: { supported?: boolean; url?: string } | null;
     monthlyAttestationReport?: { supported?: boolean; url?: string } | null;
   };
+  companyInfo?: RwaCompanyInfo | null;
 }
 
 export interface RwaTokenListRow extends RwaAssetRef {
+  tokenName?: string;
+  tokenLogoUrl?: string;
   underlyingTicker?: string;
   underlyingFullName?: string;
+  underlyingName?: string;
   companyName?: string;
   tokenPrice?: string;
   referencePrice?: string;
   tokenToShareRatio?: string;
+  volume24H?: string;
+  marketCap?: string;
+  peRatioTTM?: string;
+  statusInfo?: RwaStatusInfo;
 }
 
 export function searchRwa(keyword: string): Promise<BinanceEnvelope<RwaSearchRow[]>> {
