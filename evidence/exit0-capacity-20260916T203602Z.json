@@ -1,0 +1,1009 @@
+{
+  "probe": "exit0_capacity_reliability_v1",
+  "timestamp_utc": "2026-09-16T20:36:02.231592+00:00",
+  "chain": "56",
+  "wallet": "0x88c006832867aE0402f24D550Bfe83226D83a98B",
+  "attempts_per_size": 1,
+  "sizes_usdt": [
+    "3000",
+    "3500",
+    "4000",
+    "4250",
+    "4500",
+    "4750",
+    "5000"
+  ],
+  "gas_included": false,
+  "wrappers": [
+    {
+      "metadata": {
+        "ticker": "NVDA",
+        "name": "NVDAon",
+        "platform": "ondo",
+        "address": "0xa9ee28c80f960b889dfbd1902055218cba016f75"
+      },
+      "attempts": [
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAon",
+          "platform": "ondo",
+          "size_usdt": "3000",
+          "attempt": 1,
+          "buy_route": true,
+          "exit_route": true,
+          "full_roundtrip": true,
+          "status": "OK",
+          "buy_raw": {
+            "http_status": 200,
+            "request_path": "/api/v1/dex/aggregator/quote?binanceChainId=56&amount=3000000000000000000000&fromTokenAddress=0x55d398326f99059fF775485246999027B3197955&toTokenAddress=0xa9ee28c80f960b889dfbd1902055218cba016f75&userWalletAddress=0x88c006832867aE0402f24D550Bfe83226D83a98B",
+            "response": {
+              "code": 0,
+              "msg": "success",
+              "data": [
+                {
+                  "quoteId": "58e0281e13b14fd7837b2ca8601d6b95",
+                  "vendorName": "LiquidMesh",
+                  "executionMode": "SWAP",
+                  "binanceChainId": "56",
+                  "fromTokenAmount": "3000000000000000000000",
+                  "toTokenAmount": "13965399888805292164",
+                  "tradeFee": "0.01671232",
+                  "estimateGasFee": "450000",
+                  "priceImpactPercent": "0.0008611422",
+                  "router": "0x55d398326f99059ff775485246999027b3197955--0xa9ee28c80f960b889dfbd1902055218cba016f75",
+                  "fromToken": {
+                    "tokenContractAddress": "0x55d398326f99059fF775485246999027B3197955",
+                    "tokenSymbol": "USDT",
+                    "tokenUnitPrice": "0.9989754419472762",
+                    "decimal": "18",
+                    "isHoneyPot": false,
+                    "taxRate": "0"
+                  },
+                  "toToken": {
+                    "tokenContractAddress": "0xa9ee28c80f960b889dfbd1902055218cba016f75",
+                    "tokenSymbol": "NVDAon",
+                    "tokenUnitPrice": "214.596026298474365385",
+                    "decimal": "18",
+                    "isHoneyPot": false,
+                    "taxRate": "0"
+                  },
+                  "dexRouterList": [
+                    {
+                      "dexProtocol": {
+                        "dexName": "Metric",
+                        "percent": "98.60"
+                      },
+                      "fromToken": {
+                        "tokenContractAddress": "0x55d398326f99059ff775485246999027b3197955",
+                        "tokenSymbol": "USDT",
+                        "tokenUnitPrice": "0.9989754419472762",
+                        "decimal": "18",
+                        "isHoneyPot": false,
+                        "taxRate": "0"
+                      },
+                      "fromTokenIndex": "0",
+                      "toToken": {
+                        "tokenContractAddress": "0xa9ee28c80f960b889dfbd1902055218cba016f75",
+                        "tokenSymbol": "NVDAon",
+                        "tokenUnitPrice": "214.596026298474365385",
+                        "decimal": "18",
+                        "isHoneyPot": false,
+                        "taxRate": "0"
+                      },
+                      "toTokenIndex": "1"
+                    },
+                    {
+                      "dexProtocol": {
+                        "dexName": "Pancakeswap V3",
+                        "percent": "1.40"
+                      },
+                      "fromToken": {
+                        "tokenContractAddress": "0x55d398326f99059ff775485246999027b3197955",
+                        "tokenSymbol": "USDT",
+                        "tokenUnitPrice": "0.9989754419472762",
+                        "decimal": "18",
+                        "isHoneyPot": false,
+                        "taxRate": "0"
+                      },
+                      "fromTokenIndex": "0",
+                      "toToken": {
+                        "tokenContractAddress": "0xa9ee28c80f960b889dfbd1902055218cba016f75",
+                        "tokenSymbol": "NVDAon",
+                        "tokenUnitPrice": "214.596026298474365385",
+                        "decimal": "18",
+                        "isHoneyPot": false,
+                        "taxRate": "0"
+                      },
+                      "toTokenIndex": "1"
+                    }
+                  ],
+                  "approveTarget": "0xB44446b0c8E56988c34f7Ff73Ae904982b5FdDA5",
+                  "isBest": true,
+                  "feeAmount": null,
+                  "feeToken": null,
+                  "actualSwapAmount": null
+                }
+              ],
+              "timestamp": 1789590963622,
+              "success": true
+            }
+          },
+          "buy_vendor": "LiquidMesh",
+          "buy_price_impact": "0.0008611422",
+          "buy_trade_fee": "0.01671232",
+          "buy_estimate_gas": "450000",
+          "token_received": "13.965399888805292164",
+          "sell_raw": {
+            "http_status": 200,
+            "request_path": "/api/v1/dex/aggregator/quote?binanceChainId=56&amount=13965399888805292164&fromTokenAddress=0xa9ee28c80f960b889dfbd1902055218cba016f75&toTokenAddress=0x55d398326f99059fF775485246999027B3197955&userWalletAddress=0x88c006832867aE0402f24D550Bfe83226D83a98B",
+            "response": {
+              "code": 0,
+              "msg": "success",
+              "data": [
+                {
+                  "quoteId": "5d7b4e2285f5418a85afc5301d801dff",
+                  "vendorName": "LiquidMesh",
+                  "executionMode": "SWAP",
+                  "binanceChainId": "56",
+                  "fromTokenAmount": "13965399888805292164",
+                  "toTokenAmount": "2997305702064275005608",
+                  "tradeFee": "0.02120649",
+                  "estimateGasFee": "450000",
+                  "priceImpactPercent": "0.0000084813",
+                  "router": "0xa9ee28c80f960b889dfbd1902055218cba016f75--0x02fca66c1d1afb4e2a7884261eb00f63598a7436--0x55d398326f99059ff775485246999027b3197955",
+                  "fromToken": {
+                    "tokenContractAddress": "0xa9ee28c80f960b889dfbd1902055218cba016f75",
+                    "tokenSymbol": "NVDAon",
+                    "tokenUnitPrice": "214.596026298474365385",
+                    "decimal": "18",
+                    "isHoneyPot": false,
+                    "taxRate": "0"
+                  },
+                  "toToken": {
+                    "tokenContractAddress": "0x55d398326f99059fF775485246999027B3197955",
+                    "tokenSymbol": "USDT",
+                    "tokenUnitPrice": "0.9989754419472762",
+                    "decimal": "18",
+                    "isHoneyPot": false,
+                    "taxRate": "0"
+                  },
+                  "dexRouterList": [
+                    {
+                      "dexProtocol": {
+                        "dexName": "Metric",
+                        "percent": "99.40"
+                      },
+                      "fromToken": {
+                        "tokenContractAddress": "0xa9ee28c80f960b889dfbd1902055218cba016f75",
+                        "tokenSymbol": "NVDAon",
+                        "tokenUnitPrice": "214.596026298474365385",
+                        "decimal": "18",
+                        "isHoneyPot": false,
+                        "taxRate": "0"
+                      },
+                      "fromTokenIndex": "0",
+                      "toToken": {
+                        "tokenContractAddress": "0x55d398326f99059ff775485246999027b3197955",
+                        "tokenSymbol": "USDT",
+                        "tokenUnitPrice": "0.9989754419472762",
+                        "decimal": "18",
+                        "isHoneyPot": false,
+                        "taxRate": "0"
+                      },
+                      "toTokenIndex": "2"
+                    },
+                    {
+                      "dexProtocol": {
+                        "dexName": "Uniswap V4",
+                        "percent": "0.60"
+                      },
+                      "fromToken": {
+                        "tokenContractAddress": "0xa9ee28c80f960b889dfbd1902055218cba016f75",
+                        "tokenSymbol": "NVDAon",
+                        "tokenUnitPrice": "214.596026298474365385",
+                        "decimal": "18",
+                        "isHoneyPot": false,
+                        "taxRate": "0"
+                      },
+                      "fromTokenIndex": "0",
+                      "toToken": {
+                        "tokenContractAddress": "0x02fca66c1d1afb4e2a7884261eb00f63598a7436",
+                        "tokenSymbol": "NVDAB",
+                        "tokenUnitPrice": "214.65692121273975896385000000",
+                        "decimal": "18",
+                        "isHoneyPot": false,
+                        "taxRate": "0"
+                      },
+                      "toTokenIndex": "1"
+                    },
+                    {
+                      "dexProtocol": {
+                        "dexName": "Metric",
+                        "percent": "0.60"
+                      },
+                      "fromToken": {
+                        "tokenContractAddress": "0x02fca66c1d1afb4e2a7884261eb00f63598a7436",
+                        "tokenSymbol": "NVDAB",
+                        "tokenUnitPrice": "214.65692121273975896385000000",
+                        "decimal": "18",
+                        "isHoneyPot": false,
+                        "taxRate": "0"
+                      },
+                      "fromTokenIndex": "1",
+                      "toToken": {
+                        "tokenContractAddress": "0x55d398326f99059ff775485246999027b3197955",
+                        "tokenSymbol": "USDT",
+                        "tokenUnitPrice": "0.9989754419472762",
+                        "decimal": "18",
+                        "isHoneyPot": false,
+                        "taxRate": "0"
+                      },
+                      "toTokenIndex": "2"
+                    }
+                  ],
+                  "approveTarget": "0xB44446b0c8E56988c34f7Ff73Ae904982b5FdDA5",
+                  "isBest": true,
+                  "feeAmount": null,
+                  "feeToken": null,
+                  "actualSwapAmount": null
+                }
+              ],
+              "timestamp": 1789590965407,
+              "success": true
+            }
+          },
+          "sell_vendor": "LiquidMesh",
+          "sell_price_impact": "0.0000084813",
+          "sell_trade_fee": "0.02120649",
+          "sell_estimate_gas": "450000",
+          "recovered_usdt": "2997.305702064275005608",
+          "quoted_delta_usdt": "-2.694297935724994392",
+          "quoted_loss_usdt": "2.694297935724994392",
+          "quoted_roundtrip_loss_pct": "0.089809931190833146400",
+          "under_1pct_cost": true
+        },
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAon",
+          "platform": "ondo",
+          "size_usdt": "3500",
+          "attempt": 1,
+          "buy_route": false,
+          "exit_route": false,
+          "full_roundtrip": false,
+          "status": "NO_BUY_ROUTE",
+          "buy_raw": {
+            "http_status": 200,
+            "request_path": "/api/v1/dex/aggregator/quote?binanceChainId=56&amount=3500000000000000000000&fromTokenAddress=0x55d398326f99059fF775485246999027B3197955&toTokenAddress=0xa9ee28c80f960b889dfbd1902055218cba016f75&userWalletAddress=0x88c006832867aE0402f24D550Bfe83226D83a98B",
+            "response": {
+              "code": 40374,
+              "msg": "Insufficient liquidity for a quote. Please decrease the transaction amount or try again later.",
+              "data": null,
+              "timestamp": 1789590967863,
+              "success": false
+            }
+          }
+        },
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAon",
+          "platform": "ondo",
+          "size_usdt": "4000",
+          "attempt": 1,
+          "buy_route": false,
+          "exit_route": false,
+          "full_roundtrip": false,
+          "status": "NO_BUY_ROUTE",
+          "buy_raw": {
+            "http_status": 200,
+            "request_path": "/api/v1/dex/aggregator/quote?binanceChainId=56&amount=4000000000000000000000&fromTokenAddress=0x55d398326f99059fF775485246999027B3197955&toTokenAddress=0xa9ee28c80f960b889dfbd1902055218cba016f75&userWalletAddress=0x88c006832867aE0402f24D550Bfe83226D83a98B",
+            "response": {
+              "code": 40374,
+              "msg": "Insufficient liquidity for a quote. Please decrease the transaction amount or try again later.",
+              "data": null,
+              "timestamp": 1789590970528,
+              "success": false
+            }
+          }
+        },
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAon",
+          "platform": "ondo",
+          "size_usdt": "4250",
+          "attempt": 1,
+          "buy_route": false,
+          "exit_route": false,
+          "full_roundtrip": false,
+          "status": "NO_BUY_ROUTE",
+          "buy_raw": {
+            "http_status": 200,
+            "request_path": "/api/v1/dex/aggregator/quote?binanceChainId=56&amount=4250000000000000000000&fromTokenAddress=0x55d398326f99059fF775485246999027B3197955&toTokenAddress=0xa9ee28c80f960b889dfbd1902055218cba016f75&userWalletAddress=0x88c006832867aE0402f24D550Bfe83226D83a98B",
+            "response": {
+              "code": 40374,
+              "msg": "Insufficient liquidity for a quote. Please decrease the transaction amount or try again later.",
+              "data": null,
+              "timestamp": 1789590973065,
+              "success": false
+            }
+          }
+        },
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAon",
+          "platform": "ondo",
+          "size_usdt": "4500",
+          "attempt": 1,
+          "buy_route": false,
+          "exit_route": false,
+          "full_roundtrip": false,
+          "status": "NO_BUY_ROUTE",
+          "buy_raw": {
+            "http_status": 200,
+            "request_path": "/api/v1/dex/aggregator/quote?binanceChainId=56&amount=4500000000000000000000&fromTokenAddress=0x55d398326f99059fF775485246999027B3197955&toTokenAddress=0xa9ee28c80f960b889dfbd1902055218cba016f75&userWalletAddress=0x88c006832867aE0402f24D550Bfe83226D83a98B",
+            "response": {
+              "code": 40374,
+              "msg": "Insufficient liquidity for a quote. Please decrease the transaction amount or try again later.",
+              "data": null,
+              "timestamp": 1789590975543,
+              "success": false
+            }
+          }
+        },
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAon",
+          "platform": "ondo",
+          "size_usdt": "4750",
+          "attempt": 1,
+          "buy_route": false,
+          "exit_route": false,
+          "full_roundtrip": false,
+          "status": "NO_BUY_ROUTE",
+          "buy_raw": {
+            "http_status": 200,
+            "request_path": "/api/v1/dex/aggregator/quote?binanceChainId=56&amount=4750000000000000000000&fromTokenAddress=0x55d398326f99059fF775485246999027B3197955&toTokenAddress=0xa9ee28c80f960b889dfbd1902055218cba016f75&userWalletAddress=0x88c006832867aE0402f24D550Bfe83226D83a98B",
+            "response": {
+              "code": 40374,
+              "msg": "Insufficient liquidity for a quote. Please decrease the transaction amount or try again later.",
+              "data": null,
+              "timestamp": 1789590977985,
+              "success": false
+            }
+          }
+        },
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAon",
+          "platform": "ondo",
+          "size_usdt": "5000",
+          "attempt": 1,
+          "buy_route": false,
+          "exit_route": false,
+          "full_roundtrip": false,
+          "status": "NO_BUY_ROUTE",
+          "buy_raw": {
+            "http_status": 200,
+            "request_path": "/api/v1/dex/aggregator/quote?binanceChainId=56&amount=5000000000000000000000&fromTokenAddress=0x55d398326f99059fF775485246999027B3197955&toTokenAddress=0xa9ee28c80f960b889dfbd1902055218cba016f75&userWalletAddress=0x88c006832867aE0402f24D550Bfe83226D83a98B",
+            "response": {
+              "code": 40374,
+              "msg": "Insufficient liquidity for a quote. Please decrease the transaction amount or try again later.",
+              "data": null,
+              "timestamp": 1789590980421,
+              "success": false
+            }
+          }
+        }
+      ],
+      "summaries": [
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAon",
+          "platform": "ondo",
+          "size_usdt": "3000",
+          "attempts": 1,
+          "buy_successes": 1,
+          "exit_successes": 1,
+          "route_reliability_pct": "100",
+          "route_reliability_label": "HIGH",
+          "avg_roundtrip_loss_pct": "0.089809931190833146400",
+          "min_roundtrip_loss_pct": "0.089809931190833146400",
+          "max_roundtrip_loss_pct": "0.089809931190833146400",
+          "reliable_3_of_3": true,
+          "at_least_one_roundtrip": true
+        },
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAon",
+          "platform": "ondo",
+          "size_usdt": "3500",
+          "attempts": 1,
+          "buy_successes": 0,
+          "exit_successes": 0,
+          "route_reliability_pct": "0",
+          "route_reliability_label": "NONE",
+          "avg_roundtrip_loss_pct": null,
+          "min_roundtrip_loss_pct": null,
+          "max_roundtrip_loss_pct": null,
+          "reliable_3_of_3": false,
+          "at_least_one_roundtrip": false
+        },
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAon",
+          "platform": "ondo",
+          "size_usdt": "4000",
+          "attempts": 1,
+          "buy_successes": 0,
+          "exit_successes": 0,
+          "route_reliability_pct": "0",
+          "route_reliability_label": "NONE",
+          "avg_roundtrip_loss_pct": null,
+          "min_roundtrip_loss_pct": null,
+          "max_roundtrip_loss_pct": null,
+          "reliable_3_of_3": false,
+          "at_least_one_roundtrip": false
+        },
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAon",
+          "platform": "ondo",
+          "size_usdt": "4250",
+          "attempts": 1,
+          "buy_successes": 0,
+          "exit_successes": 0,
+          "route_reliability_pct": "0",
+          "route_reliability_label": "NONE",
+          "avg_roundtrip_loss_pct": null,
+          "min_roundtrip_loss_pct": null,
+          "max_roundtrip_loss_pct": null,
+          "reliable_3_of_3": false,
+          "at_least_one_roundtrip": false
+        },
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAon",
+          "platform": "ondo",
+          "size_usdt": "4500",
+          "attempts": 1,
+          "buy_successes": 0,
+          "exit_successes": 0,
+          "route_reliability_pct": "0",
+          "route_reliability_label": "NONE",
+          "avg_roundtrip_loss_pct": null,
+          "min_roundtrip_loss_pct": null,
+          "max_roundtrip_loss_pct": null,
+          "reliable_3_of_3": false,
+          "at_least_one_roundtrip": false
+        },
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAon",
+          "platform": "ondo",
+          "size_usdt": "4750",
+          "attempts": 1,
+          "buy_successes": 0,
+          "exit_successes": 0,
+          "route_reliability_pct": "0",
+          "route_reliability_label": "NONE",
+          "avg_roundtrip_loss_pct": null,
+          "min_roundtrip_loss_pct": null,
+          "max_roundtrip_loss_pct": null,
+          "reliable_3_of_3": false,
+          "at_least_one_roundtrip": false
+        },
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAon",
+          "platform": "ondo",
+          "size_usdt": "5000",
+          "attempts": 1,
+          "buy_successes": 0,
+          "exit_successes": 0,
+          "route_reliability_pct": "0",
+          "route_reliability_label": "NONE",
+          "avg_roundtrip_loss_pct": null,
+          "min_roundtrip_loss_pct": null,
+          "max_roundtrip_loss_pct": null,
+          "reliable_3_of_3": false,
+          "at_least_one_roundtrip": false
+        }
+      ]
+    },
+    {
+      "metadata": {
+        "ticker": "NVDA",
+        "name": "NVDAB",
+        "platform": "bstock",
+        "address": "0x02fca66c1d1afb4e2a7884261eb00f63598a7436"
+      },
+      "attempts": [
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAB",
+          "platform": "bstock",
+          "size_usdt": "3000",
+          "attempt": 1,
+          "buy_route": true,
+          "exit_route": true,
+          "full_roundtrip": true,
+          "status": "OK",
+          "buy_raw": {
+            "http_status": 200,
+            "request_path": "/api/v1/dex/aggregator/quote?binanceChainId=56&amount=3000000000000000000000&fromTokenAddress=0x55d398326f99059fF775485246999027B3197955&toTokenAddress=0x02fca66c1d1afb4e2a7884261eb00f63598a7436&userWalletAddress=0x88c006832867aE0402f24D550Bfe83226D83a98B",
+            "response": {
+              "code": 0,
+              "msg": "success",
+              "data": [
+                {
+                  "quoteId": "b175636a68784ba3b967c068a8e7eaeb",
+                  "vendorName": "LiquidMesh",
+                  "executionMode": "SWAP",
+                  "binanceChainId": "56",
+                  "fromTokenAmount": "3000000000000000000000",
+                  "toTokenAmount": "13980981649559055773",
+                  "tradeFee": "0.01671267",
+                  "estimateGasFee": "450000",
+                  "priceImpactPercent": "-0.0001064392",
+                  "router": "0x55d398326f99059ff775485246999027b3197955--0x02fca66c1d1afb4e2a7884261eb00f63598a7436",
+                  "fromToken": {
+                    "tokenContractAddress": "0x55d398326f99059fF775485246999027B3197955",
+                    "tokenSymbol": "USDT",
+                    "tokenUnitPrice": "0.9990000584904676",
+                    "decimal": "18",
+                    "isHoneyPot": false,
+                    "taxRate": "0"
+                  },
+                  "toToken": {
+                    "tokenContractAddress": "0x02fca66c1d1afb4e2a7884261eb00f63598a7436",
+                    "tokenSymbol": "NVDAB",
+                    "tokenUnitPrice": "214.65692121273975896385000000",
+                    "decimal": "18",
+                    "isHoneyPot": false,
+                    "taxRate": "0"
+                  },
+                  "dexRouterList": [
+                    {
+                      "dexProtocol": {
+                        "dexName": "Metric",
+                        "percent": "96.90"
+                      },
+                      "fromToken": {
+                        "tokenContractAddress": "0x55d398326f99059ff775485246999027b3197955",
+                        "tokenSymbol": "USDT",
+                        "tokenUnitPrice": "0.9990000584904676",
+                        "decimal": "18",
+                        "isHoneyPot": false,
+                        "taxRate": "0"
+                      },
+                      "fromTokenIndex": "0",
+                      "toToken": {
+                        "tokenContractAddress": "0x02fca66c1d1afb4e2a7884261eb00f63598a7436",
+                        "tokenSymbol": "NVDAB",
+                        "tokenUnitPrice": "214.65692121273975896385000000",
+                        "decimal": "18",
+                        "isHoneyPot": false,
+                        "taxRate": "0"
+                      },
+                      "toTokenIndex": "1"
+                    },
+                    {
+                      "dexProtocol": {
+                        "dexName": "Uniswap V3",
+                        "percent": "1.60"
+                      },
+                      "fromToken": {
+                        "tokenContractAddress": "0x55d398326f99059ff775485246999027b3197955",
+                        "tokenSymbol": "USDT",
+                        "tokenUnitPrice": "0.9990000584904676",
+                        "decimal": "18",
+                        "isHoneyPot": false,
+                        "taxRate": "0"
+                      },
+                      "fromTokenIndex": "0",
+                      "toToken": {
+                        "tokenContractAddress": "0x02fca66c1d1afb4e2a7884261eb00f63598a7436",
+                        "tokenSymbol": "NVDAB",
+                        "tokenUnitPrice": "214.65692121273975896385000000",
+                        "decimal": "18",
+                        "isHoneyPot": false,
+                        "taxRate": "0"
+                      },
+                      "toTokenIndex": "1"
+                    },
+                    {
+                      "dexProtocol": {
+                        "dexName": "Topaz Cl",
+                        "percent": "1.50"
+                      },
+                      "fromToken": {
+                        "tokenContractAddress": "0x55d398326f99059ff775485246999027b3197955",
+                        "tokenSymbol": "USDT",
+                        "tokenUnitPrice": "0.9990000584904676",
+                        "decimal": "18",
+                        "isHoneyPot": false,
+                        "taxRate": "0"
+                      },
+                      "fromTokenIndex": "0",
+                      "toToken": {
+                        "tokenContractAddress": "0x02fca66c1d1afb4e2a7884261eb00f63598a7436",
+                        "tokenSymbol": "NVDAB",
+                        "tokenUnitPrice": "214.65692121273975896385000000",
+                        "decimal": "18",
+                        "isHoneyPot": false,
+                        "taxRate": "0"
+                      },
+                      "toTokenIndex": "1"
+                    }
+                  ],
+                  "approveTarget": "0xB44446b0c8E56988c34f7Ff73Ae904982b5FdDA5",
+                  "isBest": true,
+                  "feeAmount": null,
+                  "feeToken": null,
+                  "actualSwapAmount": null
+                }
+              ],
+              "timestamp": 1789590982695,
+              "success": true
+            }
+          },
+          "buy_vendor": "LiquidMesh",
+          "buy_price_impact": "-0.0001064392",
+          "buy_trade_fee": "0.01671267",
+          "buy_estimate_gas": "450000",
+          "token_received": "13.980981649559055773",
+          "sell_raw": {
+            "http_status": 200,
+            "request_path": "/api/v1/dex/aggregator/quote?binanceChainId=56&amount=13980981649559055773&fromTokenAddress=0x02fca66c1d1afb4e2a7884261eb00f63598a7436&toTokenAddress=0x55d398326f99059fF775485246999027B3197955&userWalletAddress=0x88c006832867aE0402f24D550Bfe83226D83a98B",
+            "response": {
+              "code": 0,
+              "msg": "success",
+              "data": [
+                {
+                  "quoteId": "1460012ee29441ae866db969fc5a4814",
+                  "vendorName": "LiquidMesh",
+                  "executionMode": "SWAP",
+                  "binanceChainId": "56",
+                  "fromTokenAmount": "13980981649559055773",
+                  "toTokenAmount": "2998581387290949319471",
+                  "tradeFee": "0.01671267",
+                  "estimateGasFee": "450000",
+                  "priceImpactPercent": "0.0005901782",
+                  "router": "0x02fca66c1d1afb4e2a7884261eb00f63598a7436--0x55d398326f99059ff775485246999027b3197955",
+                  "fromToken": {
+                    "tokenContractAddress": "0x02fca66c1d1afb4e2a7884261eb00f63598a7436",
+                    "tokenSymbol": "NVDAB",
+                    "tokenUnitPrice": "214.65692121273975896385000000",
+                    "decimal": "18",
+                    "isHoneyPot": false,
+                    "taxRate": "0"
+                  },
+                  "toToken": {
+                    "tokenContractAddress": "0x55d398326f99059fF775485246999027B3197955",
+                    "tokenSymbol": "USDT",
+                    "tokenUnitPrice": "0.9990000584904676",
+                    "decimal": "18",
+                    "isHoneyPot": false,
+                    "taxRate": "0"
+                  },
+                  "dexRouterList": [
+                    {
+                      "dexProtocol": {
+                        "dexName": "Metric",
+                        "percent": "97.60"
+                      },
+                      "fromToken": {
+                        "tokenContractAddress": "0x02fca66c1d1afb4e2a7884261eb00f63598a7436",
+                        "tokenSymbol": "NVDAB",
+                        "tokenUnitPrice": "214.65692121273975896385000000",
+                        "decimal": "18",
+                        "isHoneyPot": false,
+                        "taxRate": "0"
+                      },
+                      "fromTokenIndex": "0",
+                      "toToken": {
+                        "tokenContractAddress": "0x55d398326f99059ff775485246999027b3197955",
+                        "tokenSymbol": "USDT",
+                        "tokenUnitPrice": "0.9990000584904676",
+                        "decimal": "18",
+                        "isHoneyPot": false,
+                        "taxRate": "0"
+                      },
+                      "toTokenIndex": "1"
+                    },
+                    {
+                      "dexProtocol": {
+                        "dexName": "Elfomofi",
+                        "percent": "2.40"
+                      },
+                      "fromToken": {
+                        "tokenContractAddress": "0x02fca66c1d1afb4e2a7884261eb00f63598a7436",
+                        "tokenSymbol": "NVDAB",
+                        "tokenUnitPrice": "214.65692121273975896385000000",
+                        "decimal": "18",
+                        "isHoneyPot": false,
+                        "taxRate": "0"
+                      },
+                      "fromTokenIndex": "0",
+                      "toToken": {
+                        "tokenContractAddress": "0x55d398326f99059ff775485246999027b3197955",
+                        "tokenSymbol": "USDT",
+                        "tokenUnitPrice": "0.9990000584904676",
+                        "decimal": "18",
+                        "isHoneyPot": false,
+                        "taxRate": "0"
+                      },
+                      "toTokenIndex": "1"
+                    }
+                  ],
+                  "approveTarget": "0xB44446b0c8E56988c34f7Ff73Ae904982b5FdDA5",
+                  "isBest": true,
+                  "feeAmount": null,
+                  "feeToken": null,
+                  "actualSwapAmount": null
+                }
+              ],
+              "timestamp": 1789590984214,
+              "success": true
+            }
+          },
+          "sell_vendor": "LiquidMesh",
+          "sell_price_impact": "0.0005901782",
+          "sell_trade_fee": "0.01671267",
+          "sell_estimate_gas": "450000",
+          "recovered_usdt": "2998.581387290949319471",
+          "quoted_delta_usdt": "-1.418612709050680529",
+          "quoted_loss_usdt": "1.418612709050680529",
+          "quoted_roundtrip_loss_pct": "0.047287090301689350966666666666666666666666666666667",
+          "under_1pct_cost": true
+        },
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAB",
+          "platform": "bstock",
+          "size_usdt": "3500",
+          "attempt": 1,
+          "buy_route": false,
+          "exit_route": false,
+          "full_roundtrip": false,
+          "status": "NO_BUY_ROUTE",
+          "buy_raw": {
+            "http_status": 200,
+            "request_path": "/api/v1/dex/aggregator/quote?binanceChainId=56&amount=3500000000000000000000&fromTokenAddress=0x55d398326f99059fF775485246999027B3197955&toTokenAddress=0x02fca66c1d1afb4e2a7884261eb00f63598a7436&userWalletAddress=0x88c006832867aE0402f24D550Bfe83226D83a98B",
+            "response": {
+              "code": 40374,
+              "msg": "Insufficient liquidity for a quote. Please decrease the transaction amount or try again later.",
+              "data": null,
+              "timestamp": 1789590986742,
+              "success": false
+            }
+          }
+        },
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAB",
+          "platform": "bstock",
+          "size_usdt": "4000",
+          "attempt": 1,
+          "buy_route": false,
+          "exit_route": false,
+          "full_roundtrip": false,
+          "status": "NO_BUY_ROUTE",
+          "buy_raw": {
+            "http_status": 200,
+            "request_path": "/api/v1/dex/aggregator/quote?binanceChainId=56&amount=4000000000000000000000&fromTokenAddress=0x55d398326f99059fF775485246999027B3197955&toTokenAddress=0x02fca66c1d1afb4e2a7884261eb00f63598a7436&userWalletAddress=0x88c006832867aE0402f24D550Bfe83226D83a98B",
+            "response": {
+              "code": 40374,
+              "msg": "Insufficient liquidity for a quote. Please decrease the transaction amount or try again later.",
+              "data": null,
+              "timestamp": 1789590989306,
+              "success": false
+            }
+          }
+        },
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAB",
+          "platform": "bstock",
+          "size_usdt": "4250",
+          "attempt": 1,
+          "buy_route": false,
+          "exit_route": false,
+          "full_roundtrip": false,
+          "status": "NO_BUY_ROUTE",
+          "buy_raw": {
+            "http_status": 200,
+            "request_path": "/api/v1/dex/aggregator/quote?binanceChainId=56&amount=4250000000000000000000&fromTokenAddress=0x55d398326f99059fF775485246999027B3197955&toTokenAddress=0x02fca66c1d1afb4e2a7884261eb00f63598a7436&userWalletAddress=0x88c006832867aE0402f24D550Bfe83226D83a98B",
+            "response": {
+              "code": 40374,
+              "msg": "Insufficient liquidity for a quote. Please decrease the transaction amount or try again later.",
+              "data": null,
+              "timestamp": 1789590991795,
+              "success": false
+            }
+          }
+        },
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAB",
+          "platform": "bstock",
+          "size_usdt": "4500",
+          "attempt": 1,
+          "buy_route": false,
+          "exit_route": false,
+          "full_roundtrip": false,
+          "status": "NO_BUY_ROUTE",
+          "buy_raw": {
+            "http_status": 200,
+            "request_path": "/api/v1/dex/aggregator/quote?binanceChainId=56&amount=4500000000000000000000&fromTokenAddress=0x55d398326f99059fF775485246999027B3197955&toTokenAddress=0x02fca66c1d1afb4e2a7884261eb00f63598a7436&userWalletAddress=0x88c006832867aE0402f24D550Bfe83226D83a98B",
+            "response": {
+              "code": 40374,
+              "msg": "Insufficient liquidity for a quote. Please decrease the transaction amount or try again later.",
+              "data": null,
+              "timestamp": 1789590994326,
+              "success": false
+            }
+          }
+        },
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAB",
+          "platform": "bstock",
+          "size_usdt": "4750",
+          "attempt": 1,
+          "buy_route": false,
+          "exit_route": false,
+          "full_roundtrip": false,
+          "status": "NO_BUY_ROUTE",
+          "buy_raw": {
+            "http_status": 200,
+            "request_path": "/api/v1/dex/aggregator/quote?binanceChainId=56&amount=4750000000000000000000&fromTokenAddress=0x55d398326f99059fF775485246999027B3197955&toTokenAddress=0x02fca66c1d1afb4e2a7884261eb00f63598a7436&userWalletAddress=0x88c006832867aE0402f24D550Bfe83226D83a98B",
+            "response": {
+              "code": 40374,
+              "msg": "Insufficient liquidity for a quote. Please decrease the transaction amount or try again later.",
+              "data": null,
+              "timestamp": 1789590996786,
+              "success": false
+            }
+          }
+        },
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAB",
+          "platform": "bstock",
+          "size_usdt": "5000",
+          "attempt": 1,
+          "buy_route": false,
+          "exit_route": false,
+          "full_roundtrip": false,
+          "status": "NO_BUY_ROUTE",
+          "buy_raw": {
+            "http_status": 200,
+            "request_path": "/api/v1/dex/aggregator/quote?binanceChainId=56&amount=5000000000000000000000&fromTokenAddress=0x55d398326f99059fF775485246999027B3197955&toTokenAddress=0x02fca66c1d1afb4e2a7884261eb00f63598a7436&userWalletAddress=0x88c006832867aE0402f24D550Bfe83226D83a98B",
+            "response": {
+              "code": 40374,
+              "msg": "Insufficient liquidity for a quote. Please decrease the transaction amount or try again later.",
+              "data": null,
+              "timestamp": 1789590999282,
+              "success": false
+            }
+          }
+        }
+      ],
+      "summaries": [
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAB",
+          "platform": "bstock",
+          "size_usdt": "3000",
+          "attempts": 1,
+          "buy_successes": 1,
+          "exit_successes": 1,
+          "route_reliability_pct": "100",
+          "route_reliability_label": "HIGH",
+          "avg_roundtrip_loss_pct": "0.047287090301689350966666666666666666666666666666667",
+          "min_roundtrip_loss_pct": "0.047287090301689350966666666666666666666666666666667",
+          "max_roundtrip_loss_pct": "0.047287090301689350966666666666666666666666666666667",
+          "reliable_3_of_3": true,
+          "at_least_one_roundtrip": true
+        },
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAB",
+          "platform": "bstock",
+          "size_usdt": "3500",
+          "attempts": 1,
+          "buy_successes": 0,
+          "exit_successes": 0,
+          "route_reliability_pct": "0",
+          "route_reliability_label": "NONE",
+          "avg_roundtrip_loss_pct": null,
+          "min_roundtrip_loss_pct": null,
+          "max_roundtrip_loss_pct": null,
+          "reliable_3_of_3": false,
+          "at_least_one_roundtrip": false
+        },
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAB",
+          "platform": "bstock",
+          "size_usdt": "4000",
+          "attempts": 1,
+          "buy_successes": 0,
+          "exit_successes": 0,
+          "route_reliability_pct": "0",
+          "route_reliability_label": "NONE",
+          "avg_roundtrip_loss_pct": null,
+          "min_roundtrip_loss_pct": null,
+          "max_roundtrip_loss_pct": null,
+          "reliable_3_of_3": false,
+          "at_least_one_roundtrip": false
+        },
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAB",
+          "platform": "bstock",
+          "size_usdt": "4250",
+          "attempts": 1,
+          "buy_successes": 0,
+          "exit_successes": 0,
+          "route_reliability_pct": "0",
+          "route_reliability_label": "NONE",
+          "avg_roundtrip_loss_pct": null,
+          "min_roundtrip_loss_pct": null,
+          "max_roundtrip_loss_pct": null,
+          "reliable_3_of_3": false,
+          "at_least_one_roundtrip": false
+        },
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAB",
+          "platform": "bstock",
+          "size_usdt": "4500",
+          "attempts": 1,
+          "buy_successes": 0,
+          "exit_successes": 0,
+          "route_reliability_pct": "0",
+          "route_reliability_label": "NONE",
+          "avg_roundtrip_loss_pct": null,
+          "min_roundtrip_loss_pct": null,
+          "max_roundtrip_loss_pct": null,
+          "reliable_3_of_3": false,
+          "at_least_one_roundtrip": false
+        },
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAB",
+          "platform": "bstock",
+          "size_usdt": "4750",
+          "attempts": 1,
+          "buy_successes": 0,
+          "exit_successes": 0,
+          "route_reliability_pct": "0",
+          "route_reliability_label": "NONE",
+          "avg_roundtrip_loss_pct": null,
+          "min_roundtrip_loss_pct": null,
+          "max_roundtrip_loss_pct": null,
+          "reliable_3_of_3": false,
+          "at_least_one_roundtrip": false
+        },
+        {
+          "ticker": "NVDA",
+          "wrapper": "NVDAB",
+          "platform": "bstock",
+          "size_usdt": "5000",
+          "attempts": 1,
+          "buy_successes": 0,
+          "exit_successes": 0,
+          "route_reliability_pct": "0",
+          "route_reliability_label": "NONE",
+          "avg_roundtrip_loss_pct": null,
+          "min_roundtrip_loss_pct": null,
+          "max_roundtrip_loss_pct": null,
+          "reliable_3_of_3": false,
+          "at_least_one_roundtrip": false
+        }
+      ]
+    }
+  ]
+}

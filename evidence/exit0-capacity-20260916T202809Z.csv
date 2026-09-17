@@ -1,0 +1,15 @@
+ticker,wrapper,platform,size_usdt,attempts,buy_successes,exit_successes,route_reliability_pct,route_reliability_label,avg_roundtrip_loss_pct,min_roundtrip_loss_pct,max_roundtrip_loss_pct,reliable_3_of_3,at_least_one_roundtrip
+NVDA,NVDAon,ondo,3000,3,3,3,100,HIGH,0.08969879207663338772222222222222222222222222222222,0.084900636946540414133333333333333333333333333333333,0.094796283957136938866666666666666666666666666666667,True,True
+NVDA,NVDAon,ondo,3500,3,0,0,0,NONE,,,,False,False
+NVDA,NVDAon,ondo,4000,3,0,0,0,NONE,,,,False,False
+NVDA,NVDAon,ondo,4250,3,0,0,0,NONE,,,,False,False
+NVDA,NVDAon,ondo,4500,3,0,0,0,NONE,,,,False,False
+NVDA,NVDAon,ondo,4750,3,0,0,0,NONE,,,,False,False
+NVDA,NVDAon,ondo,5000,3,0,0,0,NONE,,,,False,False
+NVDA,NVDAB,bstock,3000,3,3,3,100,HIGH,0.014142805060700871511111111111111111111111111111111,0.013204003162814080500,0.014714885237884665600,True,True
+NVDA,NVDAB,bstock,3500,3,0,0,0,NONE,,,,False,False
+NVDA,NVDAB,bstock,4000,3,0,0,0,NONE,,,,False,False
+NVDA,NVDAB,bstock,4250,3,0,0,0,NONE,,,,False,False
+NVDA,NVDAB,bstock,4500,3,0,0,0,NONE,,,,False,False
+NVDA,NVDAB,bstock,4750,3,0,0,0,NONE,,,,False,False
+NVDA,NVDAB,bstock,5000,3,0,0,0,NONE,,,,False,False

@@ -1,0 +1,483 @@
+{
+  "timestamp_utc": "2026-09-16T21:08:13.689730+00:00",
+  "sample_size_underlyings": 30,
+  "sample_tickers": [
+    "NVDA",
+    "TSLA",
+    "AAPL",
+    "MSFT",
+    "AMZN",
+    "META",
+    "GOOGL",
+    "AMD",
+    "AXTI",
+    "CRCL",
+    "RKLB",
+    "CRWV",
+    "NBIS",
+    "GLW",
+    "SNDK",
+    "BABA",
+    "QQQ",
+    "SKHY",
+    "TSM",
+    "FSOL",
+    "AOSL",
+    "REMX",
+    "ACHR",
+    "CLF",
+    "ITA",
+    "SHY",
+    "TEL",
+    "SNOW",
+    "VZ",
+    "LLY"
+  ],
+  "manifest": [
+    {
+      "ticker": "NVDA",
+      "paired": true,
+      "market_cap_proxy": "5164576466049",
+      "assets": [
+        {
+          "platform": "ondo",
+          "symbol": "NVDAon",
+          "contract": "0xa9ee28c80f960b889dfbd1902055218cba016f75"
+        },
+        {
+          "platform": "bstock",
+          "symbol": "NVDAB",
+          "contract": "0x02fca66c1d1afb4e2a7884261eb00f63598a7436"
+        }
+      ]
+    },
+    {
+      "ticker": "TSLA",
+      "paired": true,
+      "market_cap_proxy": "1414897142283",
+      "assets": [
+        {
+          "platform": "bstock",
+          "symbol": "TSLAB",
+          "contract": "0x5b1910eaad6450e50f816082aa078c41f10c292f"
+        },
+        {
+          "platform": "ondo",
+          "symbol": "TSLAon",
+          "contract": "0x2494b603319d4d9f9715c9f4496d9e0364b59d93"
+        }
+      ]
+    },
+    {
+      "ticker": "AAPL",
+      "paired": false,
+      "market_cap_proxy": "4852272966400",
+      "assets": [
+        {
+          "platform": "ondo",
+          "symbol": "AAPLon",
+          "contract": "0x390a684ef9cade28a7ad0dfa61ab1eb3842618c4"
+        }
+      ]
+    },
+    {
+      "ticker": "MSFT",
+      "paired": true,
+      "market_cap_proxy": "3691387174486",
+      "assets": [
+        {
+          "platform": "bstock",
+          "symbol": "MSFTB",
+          "contract": "0x80106cb3ead06659a5ad19df39d9b4733863b9b0"
+        },
+        {
+          "platform": "ondo",
+          "symbol": "MSFTon",
+          "contract": "0x6bfe75d1ad432050ea973c3a3dcd88f02e2444c3"
+        }
+      ]
+    },
+    {
+      "ticker": "AMZN",
+      "paired": false,
+      "market_cap_proxy": "2653109549305",
+      "assets": [
+        {
+          "platform": "ondo",
+          "symbol": "AMZNon",
+          "contract": "0x4553cfe1c09f37f38b12dc509f676964e392f8fc"
+        }
+      ]
+    },
+    {
+      "ticker": "META",
+      "paired": true,
+      "market_cap_proxy": "1715039419020",
+      "assets": [
+        {
+          "platform": "bstock",
+          "symbol": "METAB",
+          "contract": "0x7425889fe94f9d693e8daefe88bcced6acfef4c0"
+        },
+        {
+          "platform": "ondo",
+          "symbol": "METAon",
+          "contract": "0xd7df5863a3e742f0c767768cdfcb63f09e0422f6"
+        }
+      ]
+    },
+    {
+      "ticker": "GOOGL",
+      "paired": true,
+      "market_cap_proxy": "4219082917998",
+      "assets": [
+        {
+          "platform": "bstock",
+          "symbol": "GOOGLB",
+          "contract": "0x3f53de71c126bdabae20f9cd64848d317f6c3238"
+        },
+        {
+          "platform": "ondo",
+          "symbol": "GOOGLon",
+          "contract": "0x091fc7778e6932d4009b087b191d1ee3bac5729a"
+        }
+      ]
+    },
+    {
+      "ticker": "AMD",
+      "paired": true,
+      "market_cap_proxy": "837149526288",
+      "assets": [
+        {
+          "platform": "bstock",
+          "symbol": "AMDB",
+          "contract": "0x75fd4cf6f8392e41e70391d60c90c0d5211603a1"
+        },
+        {
+          "platform": "ondo",
+          "symbol": "AMDon",
+          "contract": "0x9f16e46c73b43bdb70861247d537bee4ea18f639"
+        }
+      ]
+    },
+    {
+      "ticker": "AXTI",
+      "paired": true,
+      "market_cap_proxy": "4216849331",
+      "assets": [
+        {
+          "platform": "bstock",
+          "symbol": "AXTIB",
+          "contract": "0x9bdc8b470dbf89dbcb123587c6f5e49cca3463be"
+        },
+        {
+          "platform": "ondo",
+          "symbol": "AXTIon",
+          "contract": "0x0c50323af81d5c33822c6add256fb9093d42bc74"
+        }
+      ]
+    },
+    {
+      "ticker": "CRCL",
+      "paired": true,
+      "market_cap_proxy": "21909488530",
+      "assets": [
+        {
+          "platform": "bstock",
+          "symbol": "CRCLB",
+          "contract": "0x80f3d493ebce97e343c53d29a137942416b4ffc0"
+        },
+        {
+          "platform": "ondo",
+          "symbol": "CRCLon",
+          "contract": "0x992879cd8ce0c312d98648875b5a8d6d042cbf34"
+        }
+      ]
+    },
+    {
+      "ticker": "RKLB",
+      "paired": true,
+      "market_cap_proxy": "40698665466",
+      "assets": [
+        {
+          "platform": "bstock",
+          "symbol": "RKLBB",
+          "contract": "0xc8da12cbcce7c45180692a6420b0076e03a5179a"
+        },
+        {
+          "platform": "ondo",
+          "symbol": "RKLBon",
+          "contract": "0xb4d695569236273745b4cd54b539b1b9cc1513af"
+        }
+      ]
+    },
+    {
+      "ticker": "CRWV",
+      "paired": true,
+      "market_cap_proxy": "45973333460",
+      "assets": [
+        {
+          "platform": "ondo",
+          "symbol": "CRWVon",
+          "contract": "0x76e39171cb665a35981e744e2ceb7012f76caeac"
+        },
+        {
+          "platform": "bstock",
+          "symbol": "CRWVB",
+          "contract": "0x33e7317e17838fee56b10fe8d0b9ca6ca3090c95"
+        }
+      ]
+    },
+    {
+      "ticker": "NBIS",
+      "paired": true,
+      "market_cap_proxy": "56890631742",
+      "assets": [
+        {
+          "platform": "ondo",
+          "symbol": "NBISon",
+          "contract": "0xee268780473e7a0e47bac41547c6e01512555a16"
+        },
+        {
+          "platform": "bstock",
+          "symbol": "NBISB",
+          "contract": "0xe256bc2a4f5297f8ba6f043f180a46300ecbcbb1"
+        }
+      ]
+    },
+    {
+      "ticker": "GLW",
+      "paired": true,
+      "market_cap_proxy": "124177741797",
+      "assets": [
+        {
+          "platform": "bstock",
+          "symbol": "GLWB",
+          "contract": "0x740e075cbbea22a082b9d6679e65e82767875b6a"
+        },
+        {
+          "platform": "ondo",
+          "symbol": "GLWon",
+          "contract": "0x25a4dbae9a0cd8c75656d6b50ffdf4900cc20d8f"
+        }
+      ]
+    },
+    {
+      "ticker": "SNDK",
+      "paired": true,
+      "market_cap_proxy": "224152848631",
+      "assets": [
+        {
+          "platform": "bstock",
+          "symbol": "SNDKB",
+          "contract": "0x3ee4df61bd4f867e349beae8bfe07bc31b4850fb"
+        },
+        {
+          "platform": "ondo",
+          "symbol": "SNDKon",
+          "contract": "0x4fd67cb8cfedc718bac984b5936abe3330d0a2a4"
+        }
+      ]
+    },
+    {
+      "ticker": "BABA",
+      "paired": true,
+      "market_cap_proxy": "271778086064.1",
+      "assets": [
+        {
+          "platform": "bstock",
+          "symbol": "BABAB",
+          "contract": "0x4ef9d3062c7f6eba4aae4990c5036598c6eff4ec"
+        },
+        {
+          "platform": "ondo",
+          "symbol": "BABAon",
+          "contract": "0xd5964f3fcee8d649995ab88f04b8982539c282d2"
+        }
+      ]
+    },
+    {
+      "ticker": "QQQ",
+      "paired": true,
+      "market_cap_proxy": "473909475776",
+      "assets": [
+        {
+          "platform": "bstock",
+          "symbol": "QQQB",
+          "contract": "0x205812cdbed920aff76c6580abd681a46d11efc7"
+        },
+        {
+          "platform": "ondo",
+          "symbol": "QQQon",
+          "contract": "0x0cde6936d305d5b34667fc46425e852efd73559a"
+        }
+      ]
+    },
+    {
+      "ticker": "SKHY",
+      "paired": true,
+      "market_cap_proxy": "1241039305935.3",
+      "assets": [
+        {
+          "platform": "bstock",
+          "symbol": "SKHYB",
+          "contract": "0xca750ef65f295bbecd685abf54e82caf297bdb61"
+        },
+        {
+          "platform": "ondo",
+          "symbol": "SKHYon",
+          "contract": "0x4268f2bfb23a7496504aa5ed1ee325248586299f"
+        }
+      ]
+    },
+    {
+      "ticker": "TSM",
+      "paired": true,
+      "market_cap_proxy": "2167489727721",
+      "assets": [
+        {
+          "platform": "bstock",
+          "symbol": "TSMB",
+          "contract": "0xab78b89b5bb00236be0b4b20704cbfa04efc711c"
+        },
+        {
+          "platform": "ondo",
+          "symbol": "TSMon",
+          "contract": "0xc37042a7a4fa510d8884a433762ab87257b91965"
+        }
+      ]
+    },
+    {
+      "ticker": "FSOL",
+      "paired": false,
+      "market_cap_proxy": "0",
+      "assets": [
+        {
+          "platform": "ondo",
+          "symbol": "FSOLon",
+          "contract": "0x54b92fd77229269ff6484942c123cca72f2d6fec"
+        }
+      ]
+    },
+    {
+      "ticker": "AOSL",
+      "paired": false,
+      "market_cap_proxy": "745890636",
+      "assets": [
+        {
+          "platform": "ondo",
+          "symbol": "AOSLon",
+          "contract": "0x55b8cc618c4209a97250dff926d3d708814d36aa"
+        }
+      ]
+    },
+    {
+      "ticker": "REMX",
+      "paired": false,
+      "market_cap_proxy": "1979086695",
+      "assets": [
+        {
+          "platform": "ondo",
+          "symbol": "REMXon",
+          "contract": "0xc16f47c4a7ed39372b9a0e3e2016cede9b4cb83a"
+        }
+      ]
+    },
+    {
+      "ticker": "ACHR",
+      "paired": false,
+      "market_cap_proxy": "4025798674",
+      "assets": [
+        {
+          "platform": "ondo",
+          "symbol": "ACHRon",
+          "contract": "0x91c62325f901ee29da8e521cfe68980332a4ca06"
+        }
+      ]
+    },
+    {
+      "ticker": "CLF",
+      "paired": false,
+      "market_cap_proxy": "6927628475",
+      "assets": [
+        {
+          "platform": "ondo",
+          "symbol": "CLFon",
+          "contract": "0xac38a6608868e2f487d7993ea7339c69e5ab077b"
+        }
+      ]
+    },
+    {
+      "ticker": "ITA",
+      "paired": false,
+      "market_cap_proxy": "12700930000",
+      "assets": [
+        {
+          "platform": "ondo",
+          "symbol": "ITAon",
+          "contract": "0x88b90f45bd6a4f97f7d85d280ed64a40880e4935"
+        }
+      ]
+    },
+    {
+      "ticker": "SHY",
+      "paired": false,
+      "market_cap_proxy": "26025546978",
+      "assets": [
+        {
+          "platform": "ondo",
+          "symbol": "SHYon",
+          "contract": "0xf95e50be5efc96117c28775f80c7cdb41ebc4888"
+        }
+      ]
+    },
+    {
+      "ticker": "TEL",
+      "paired": false,
+      "market_cap_proxy": "58567078458",
+      "assets": [
+        {
+          "platform": "ondo",
+          "symbol": "TELon",
+          "contract": "0x5c50ffd365c852f5e72bfbc2c1ae621e2aca5ece"
+        }
+      ]
+    },
+    {
+      "ticker": "SNOW",
+      "paired": false,
+      "market_cap_proxy": "116737992000",
+      "assets": [
+        {
+          "platform": "ondo",
+          "symbol": "SNOWon",
+          "contract": "0x138ed6833ff4e8811e1fea0d005e13726c8886f9"
+        }
+      ]
+    },
+    {
+      "ticker": "VZ",
+      "paired": false,
+      "market_cap_proxy": "206922911822",
+      "assets": [
+        {
+          "platform": "ondo",
+          "symbol": "VZon",
+          "contract": "0xa3b089c886e6d721f49def8e050f3b9d4362560b"
+        }
+      ]
+    },
+    {
+      "ticker": "LLY",
+      "paired": false,
+      "market_cap_proxy": "1014976405452",
+      "assets": [
+        {
+          "platform": "ondo",
+          "symbol": "LLYon",
+          "contract": "0x341d31b2be1fee9c00e395a62ba41837f4322eed"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,271 @@
+{
+    "version":  "0.1",
+    "requestId":  "chk_c5c2470e-e315-4700-9801-dddf7695b949",
+    "checkedAt":  "2026-09-16T22:35:55.885Z",
+    "request":  {
+                    "ticker":  "NVDA",
+                    "contractAddress":  null,
+                    "intent":  "BUY",
+                    "amountUsd":  "1000",
+                    "platform":  null,
+                    "chainId":  "56"
+                },
+    "methodology":  {
+                        "execution":  "Synthetic current entry quote followed by a full reverse quote. This measures current execution friction; it is not a forecast of future investment return.",
+                        "conservativeValuation":  "Minimum of displayed notional, reference-adjusted value, and currently executable synthetic value when available."
+                    },
+    "underlying":  {
+                       "ticker":  "NVDA",
+                       "name":  "Nvidia Corp",
+                       "assetType":  "equity"
+                   },
+    "wrappers":  [
+                     {
+                         "identity":  {
+                                          "symbol":  "NVDAon",
+                                          "platform":  "ondo",
+                                          "chainId":  "56",
+                                          "contractAddress":  "0xa9ee28c80f960b889dfbd1902055218cba016f75",
+                                          "tokenShareRatio":  "1.0017152487959898"
+                                      },
+                         "passport":  {
+                                          "provider":  "ondo",
+                                          "attestation":  {
+                                                              "daily":  "AVAILABLE",
+                                                              "monthly":  "AVAILABLE",
+                                                              "dailyUrl":  "https://onchainos.bnbstatic.com/images/web3-data/public/token/ondo/pdf/daily-2026-09-10.pdf",
+                                                              "monthlyUrl":  "https://onchainos.bnbstatic.com/images/web3-data/public/token/ondo/pdf/monthly-2026-07.pdf"
+                                                          },
+                                          "dataCompleteness":  "COMPLETE",
+                                          "missingFields":  [
+
+                                                            ]
+                                      },
+                         "market":  {
+                                        "tokenPriceUsd":  "215.329223761108599751",
+                                        "referencePriceUsd":  "214.960513",
+                                        "referenceGapPct":  "0.17152487959898",
+                                        "tokenPriceUpdatedAt":  1789598150451,
+                                        "referencePriceUpdatedAt":  null,
+                                        "session":  {
+                                                        "open":  true,
+                                                        "status":  "postmarket",
+                                                        "reason":  "TRADING",
+                                                        "nextOpenAt":  1789603500000,
+                                                        "nextCloseAt":  1789603140000
+                                                    }
+                                    },
+                         "integrity":  {
+                                           "tokenShareRatioKnown":  true,
+                                           "referenceAvailable":  true,
+                                           "attestationAvailable":  true,
+                                           "status":  "PASS"
+                                       },
+                         "execution":  {
+                                           "requestedNotionalUsd":  "1000",
+                                           "methodology":  "SYNTHETIC_ENTRY_THEN_FULL_EXIT",
+                                           "entry":  {
+                                                         "available":  true,
+                                                         "vendor":  "LiquidMesh",
+                                                         "errorCode":  null,
+                                                         "errorMessage":  null
+                                                     },
+                                           "exit":  {
+                                                        "available":  true,
+                                                        "vendor":  "LiquidMesh",
+                                                        "errorCode":  null,
+                                                        "errorMessage":  null
+                                                    },
+                                           "executableValueUsd":  "975.11762533623584659",
+                                           "currentHaircutUsd":  "24.88237466376415341",
+                                           "currentHaircutPct":  "2.48823746637641534",
+                                           "favorableQuotedDeltaUsd":  null,
+                                           "quoteTimestamp":  "2026-09-16T22:35:56.484Z"
+                                       },
+                         "valuation":  {
+                                           "displayedValueUsd":  "1000",
+                                           "referenceAdjustedValueUsd":  "998.28768824468686004",
+                                           "executableValueUsd":  "975.11762533623584659",
+                                           "conservativeValueUsd":  "975.11762533623584659",
+                                           "basis":  [
+                                                         "REFERENCE",
+                                                         "EXECUTABLE_VALUE",
+                                                         "DISPLAYED_VALUE"
+                                                     ]
+                                       },
+                         "corporateActions":  {
+                                                  "activeIssue":  null,
+                                                  "status":  "UNKNOWN",
+                                                  "events":  [
+
+                                                             ],
+                                                  "note":  "Corporate-action reconciliation is not enabled in Underly v0.1."
+                                              },
+                         "findings":  [
+                                          {
+                                              "code":  "HIGH_EXECUTION_FRICTION",
+                                              "severity":  "critical",
+                                              "title":  "Elevated current execution friction",
+                                              "message":  "Current synthetic entry-to-full-exit recovery is materially below the requested notional.",
+                                              "evidence":  {
+                                                               "requestedNotionalUsd":  "1000",
+                                                               "executableValueUsd":  "975.11762533623584659",
+                                                               "haircutPct":  "2.48823746637641534"
+                                                           }
+                                          }
+                                      ],
+                         "sources":  [
+                                         {
+                                             "provider":  "Binance Web3 API",
+                                             "endpoint":  "RWA Price",
+                                             "observedAt":  "2026-09-16T22:35:55.885Z",
+                                             "upstreamCode":  0
+                                         },
+                                         {
+                                             "provider":  "Binance Web3 API",
+                                             "endpoint":  "Underlying Market",
+                                             "observedAt":  "2026-09-16T22:35:55.885Z",
+                                             "upstreamCode":  0
+                                         },
+                                         {
+                                             "provider":  "Binance Web3 API",
+                                             "endpoint":  "Underlying Profile",
+                                             "observedAt":  "2026-09-16T22:35:55.885Z",
+                                             "upstreamCode":  0
+                                         },
+                                         {
+                                             "provider":  "Binance Web3 API",
+                                             "endpoint":  "Aggregator Quote",
+                                             "observedAt":  "2026-09-16T22:35:56.484Z"
+                                         }
+                                     ]
+                     },
+                     {
+                         "identity":  {
+                                          "symbol":  "NVDAB",
+                                          "platform":  "bstock",
+                                          "chainId":  "56",
+                                          "contractAddress":  "0x02fca66c1d1afb4e2a7884261eb00f63598a7436",
+                                          "tokenShareRatio":  "1.000778223752807865"
+                                      },
+                         "passport":  {
+                                          "provider":  "bstock",
+                                          "attestation":  {
+                                                              "daily":  "UNKNOWN",
+                                                              "monthly":  "UNKNOWN",
+                                                              "dailyUrl":  null,
+                                                              "monthlyUrl":  null
+                                                          },
+                                          "dataCompleteness":  "PARTIAL",
+                                          "missingFields":  [
+                                                                "dailyAttestation",
+                                                                "monthlyAttestation"
+                                                            ]
+                                      },
+                         "market":  {
+                                        "tokenPriceUsd":  null,
+                                        "referencePriceUsd":  null,
+                                        "referenceGapPct":  null,
+                                        "tokenPriceUpdatedAt":  null,
+                                        "referencePriceUpdatedAt":  null,
+                                        "session":  {
+                                                        "open":  true,
+                                                        "status":  null,
+                                                        "reason":  "TRADING",
+                                                        "nextOpenAt":  null,
+                                                        "nextCloseAt":  null
+                                                    }
+                                    },
+                         "integrity":  {
+                                           "tokenShareRatioKnown":  true,
+                                           "referenceAvailable":  false,
+                                           "attestationAvailable":  null,
+                                           "status":  "UNKNOWN"
+                                       },
+                         "execution":  {
+                                           "requestedNotionalUsd":  "1000",
+                                           "methodology":  "SYNTHETIC_ENTRY_THEN_FULL_EXIT",
+                                           "entry":  {
+                                                         "available":  true,
+                                                         "vendor":  "LiquidMesh",
+                                                         "errorCode":  null,
+                                                         "errorMessage":  null
+                                                     },
+                                           "exit":  {
+                                                        "available":  true,
+                                                        "vendor":  "LiquidMesh",
+                                                        "errorCode":  null,
+                                                        "errorMessage":  null
+                                                    },
+                                           "executableValueUsd":  "1000.0465370161392684",
+                                           "currentHaircutUsd":  "0",
+                                           "currentHaircutPct":  "0",
+                                           "favorableQuotedDeltaUsd":  "0.0465370161392684",
+                                           "quoteTimestamp":  "2026-09-16T22:35:57.144Z"
+                                       },
+                         "valuation":  {
+                                           "displayedValueUsd":  "1000",
+                                           "referenceAdjustedValueUsd":  null,
+                                           "executableValueUsd":  "1000.0465370161392684",
+                                           "conservativeValueUsd":  "1000",
+                                           "basis":  [
+                                                         "EXECUTABLE_VALUE",
+                                                         "DISPLAYED_VALUE"
+                                                     ]
+                                       },
+                         "corporateActions":  {
+                                                  "activeIssue":  null,
+                                                  "status":  "UNKNOWN",
+                                                  "events":  [
+
+                                                             ],
+                                                  "note":  "Corporate-action reconciliation is not enabled in Underly v0.1."
+                                              },
+                         "findings":  [
+                                          {
+                                              "code":  "REFERENCE_UNAVAILABLE",
+                                              "severity":  "unknown",
+                                              "title":  "Reference price unavailable",
+                                              "message":  "Underly could not obtain a current reference price for this wrapper."
+                                          },
+                                          {
+                                              "code":  "WRAPPER_DATA_INCOMPLETE",
+                                              "severity":  "unknown",
+                                              "title":  "Wrapper metadata is incomplete",
+                                              "message":  "Some wrapper integrity fields are unavailable; Underly will not treat missing data as a pass."
+                                          }
+                                      ],
+                         "sources":  [
+                                         {
+                                             "provider":  "Binance Web3 API",
+                                             "endpoint":  "RWA Price",
+                                             "observedAt":  "2026-09-16T22:35:55.885Z",
+                                             "upstreamCode":  42900
+                                         },
+                                         {
+                                             "provider":  "Binance Web3 API",
+                                             "endpoint":  "Underlying Market",
+                                             "observedAt":  "2026-09-16T22:35:55.885Z",
+                                             "upstreamCode":  0
+                                         },
+                                         {
+                                             "provider":  "Binance Web3 API",
+                                             "endpoint":  "Underlying Profile",
+                                             "observedAt":  "2026-09-16T22:35:55.885Z",
+                                             "upstreamCode":  0
+                                         },
+                                         {
+                                             "provider":  "Binance Web3 API",
+                                             "endpoint":  "Aggregator Quote",
+                                             "observedAt":  "2026-09-16T22:35:57.144Z"
+                                         }
+                                     ]
+                     }
+                 ],
+    "proof":  {
+                  "proofId":  "up_d37dde1786e13a45",
+                  "schemaVersion":  "underly-proof-v1",
+                  "generatedAt":  "2026-09-16T22:35:57.295Z",
+                  "dataHash":  "sha256:d37dde1786e13a458d1758571f5591079e5b72af74068158d9cace6a454c44bb"
+              }
+}
