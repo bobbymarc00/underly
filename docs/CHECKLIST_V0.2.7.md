@@ -1,0 +1,22 @@
+# Underly v0.2.7 Wallet Inspector Checklist
+
+- [x] public EVM address input only
+- [x] strict address validation
+- [x] configurable `UNDERLY_RPC_URL`
+- [x] RPC URL omitted from responses
+- [x] `eth_chainId` must match `UNDERLY_CHAIN_ID`
+- [x] one explicit `eth_blockNumber` snapshot per request
+- [x] Binance Web3 RWA universe remains source of wrapper membership
+- [x] wrapper contracts deduplicated
+- [x] ERC-20 `balanceOf` via `eth_call` only
+- [x] every balance read uses the same block tag
+- [x] raw balance hex preserved
+- [x] base-unit decimal preserved
+- [x] normalized token quantity emitted only with valid decimals
+- [x] zero balance is distinct from failed read
+- [x] partial failures remain explicit
+- [x] all-check failure returns `UNAVAILABLE` / HTTP 502
+- [x] missing RPC returns `NOT_CONFIGURED` / HTTP 503
+- [x] no seed phrase/private key/signature/approval/broadcast path
+- [x] no ActionGuard/firewall mutation
+- [x] tests cover read-only RPC surface and route failure semantics
