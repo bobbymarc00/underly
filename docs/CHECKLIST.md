@@ -1,68 +1,103 @@
 # Underly Build Checklist
 
+This is the authoritative project checklist.
+
 ## Foundation
 - [x] Windows + VS Code development
-- [x] Next.js + TypeScript
+- [x] Next.js 16 + TypeScript
 - [x] Server-only Binance credentials
+- [x] Signed Binance Web3 requests
+- [x] Bounded `42900` retry with fresh signature
+- [x] Decimal-string financial transport
+- [x] Vitest regression suite
 - [x] Production build
-- [x] Vitest
-- [x] Bounded Binance 42900 retry with fresh signatures
 
-## Core data
-- [x] RWA discovery
-- [x] Wrapper identity
-- [x] RWA token/reference price
-- [x] Underlying market/session
-- [x] Underlying profile
+## Discovery / data
+- [x] `/api/search`
+- [x] Dynamic RWA discovery
+- [x] Multiple BSC wrappers
+- [x] Platform filtering
+- [x] Direct `contractAddress` resolution
+- [x] Token/reference prices
+- [x] Market/session state
+- [x] Wrapper/profile metadata
 - [x] Attestation metadata
-- [x] Aggregator quote
 
-## Underly engine
+`/api/asset/[contract]` from the early blueprint is superseded by `contractAddress` support on `/api/firewall/check`; no separate endpoint is required for v0.1.
+
+## Underly core
 - [x] Asset Passport
 - [x] Wrapper Integrity
 - [x] Reference divergence
 - [x] Conservative valuation
 - [x] Deterministic findings
 - [x] Source provenance
-- [x] SHA-256 proof
-- [x] Finding dedupe
+- [x] SHA-256 Underly Proof
+- [x] ActionGuard `CLEAR | ACTIVE | UNKNOWN`
+- [x] Missing data != PASS
 
 ## Intent engine
-- [x] BUY: current entry + full reverse liquidity probe
-- [x] HOLD: no synthetic execution probe
-- [x] SELL: direct current exit quote from position notional
-- [x] COLLATERAL: current liquidation-value quote from position notional
-- [x] Intent-aware execution findings
-- [x] `tradingAvailable` session naming
-- [x] Intent-specific execution methodology labels
+- [x] BUY — entry + reverse liquidity probe
+- [x] HOLD — no synthetic execution
+- [x] SELL — exact `tokenAmount` or USD-notional fallback
+- [x] COLLATERAL — exact `tokenAmount` or USD-notional fallback
+- [x] `quantitySource` provenance
+- [x] Entry / exit / round-trip breakdown
+- [x] Favorable delta separated from friction
+- [x] Compatibility haircut fields retained
 
-## Live validation
-- [x] NVDA / multiple wrappers
-- [x] TEL / execution friction
-- [x] VZ / reference divergence
-- [x] AOSL / non-trading session
-- [x] AXTI / wrapper differences
-- [ ] BUY intent regression matrix after intent patch
-- [ ] HOLD intent live validation
-- [ ] SELL intent live validation
-- [ ] COLLATERAL intent live validation
+## API contract
+- [x] `/api/firewall/check` schema v0.1 frozen
+- [x] `/api/search` contract regression-tested
+- [x] Exact `tokenAmount` semantics
+- [x] `contractAddress` path
+- [x] Multi-wrapper isolation
+- [x] Platform filtering
+- [x] Fail-closed upstream fixture
+- [x] Proof hash independently recomputed
+- [x] 7 test files / 39 tests passing
+- [x] Next.js production build passing
 
-## Next modules
-- [ ] Corporate-action signals
-- [ ] Corporate-action halt/event interpretation
-- [ ] Collateral policy layer beyond conservative mark
-- [ ] Response schema freeze
-- [ ] Production/Vercel evidence
+## Production validation
+- [x] Vercel deployment
+- [x] Binance Web3 production connectivity
+- [x] Vercel Function Region `sin1`
+- [x] `/api/search?q=NVDA`
+- [x] BUY production smoke
+- [x] HOLD production smoke
+- [x] SELL exact `tokenAmount=4.5`
+- [x] COLLATERAL exact `tokenAmount=4.5`
+- [x] Direct contract resolution
+- [x] `platform=bstock`
+- [x] AOSL non-trading-session finding
+- [x] VZ reference-divergence finding
+- [x] Production proof hash + proofId verification
+
+TEL previously demonstrated high execution friction; the latest production snapshot did not cross that finding threshold. Execution friction is intentionally live and may change with liquidity.
+
+## Production infrastructure observation
+Vercel `iad1` returned Binance Web3 business code `40304` (`Service not available due to compliance restriction`) for the RWA service. Running the production Function in Vercel `sin1` restored successful RWA access. This is recorded as an observed deployment constraint, not as application risk logic.
 
 ## UI
-- [x] Minimal functional debug UI
-- [ ] Final polished UI — intentionally LAST
+- [x] Minimal debug UI
+- [ ] Final GG UI
+- [ ] Intent-aware input UX
+- [ ] Asset search experience
+- [ ] Wrapper comparison
+- [ ] Passport visualization
+- [ ] Session / reference visualization
+- [ ] Execution-friction visualization
+- [ ] Conservative valuation visualization
+- [ ] ActionGuard visualization
+- [ ] Deterministic findings UX
+- [ ] Sources / proof receipt
+- [ ] Responsive/mobile polish
+- [ ] Final demo polish
 
-## Phase 4.5 — Execution Explainability
-- [x] Explicit BUY entry benchmark
-- [x] Explicit BUY exit benchmark
-- [x] Explicit BUY round-trip benchmark
-- [x] Direct SELL/COLLATERAL exit breakdown
-- [x] Favorable delta separated from friction
-- [x] Legacy haircut fields preserved for compatibility
-- [ ] Live verification on NVDA wrappers
+## Deferred beyond v0.1
+- [ ] Automatic wallet holdings discovery
+- [ ] Real transaction execution
+- [ ] Full legal-rights database
+- [ ] Full corporate-action calendar/reconciliation
+- [ ] On-chain proof anchoring
+- [ ] Agent Studio / x402

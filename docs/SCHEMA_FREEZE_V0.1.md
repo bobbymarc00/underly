@@ -1,4 +1,4 @@
-﻿# UNDERLY `/api/firewall/check` — Schema Freeze v0.1
+# UNDERLY `/api/firewall/check` — Schema Freeze v0.1
 
 Status: FROZEN
 
@@ -140,8 +140,8 @@ v0.1 retains:
 
 Accepted after:
 
-- 6 test files passed
-- 35 tests passed
+- Schema freeze was established with the firewall contract regression suite passing.
+- Current post-freeze regression baseline: 7 test files / 39 tests passing.
 - response-contract regression tests passed
 - stale pre-freeze execution field names removed
 - TypeScript production build passed
@@ -156,4 +156,3 @@ Breaking changes require a version/schema bump.
 Backward-compatible additions must still be deliberate, documented, and regression-tested.
 
 Missing evidence must never be converted into PASS for compatibility.
-

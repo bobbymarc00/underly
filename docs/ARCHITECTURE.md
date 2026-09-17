@@ -33,11 +33,9 @@ HOLD
  no aggregator execution call
 
 SELL
- USD position notional
+ exact tokenAmount OR USD position notional
        |
- current token price + token decimals
-       |
- derived token quantity
+ user quantity OR token-price-derived quantity
        |
  token -> USDT direct quote
 
@@ -49,7 +47,7 @@ COLLATERAL
  conservative valuation
 ```
 
-Direct SELL/COLLATERAL quantities are estimates derived from current token price. Underly exposes this provenance rather than presenting the quantity as an exact wallet holding.
+Direct SELL/COLLATERAL quantity provenance is explicit: `USER_SUPPLIED` for exact `tokenAmount`, or `DERIVED_FROM_TOKEN_PRICE` for the `amountUsd` fallback. Underly never presents a derived quantity as an exact wallet holding.
 
 ## Execution breakdown layer
 `src/lib/underly/execution.ts` owns execution measurement and emits explicit per-leg benchmark objects. The UI must render these values; it must not recompute friction from raw quote data.

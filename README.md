@@ -66,7 +66,7 @@ Invoke-RestMethod -Method Post `
 
 ## Vercel
 
-Add the same environment variables in Vercel Project Settings → Environment Variables. **Never** rename Binance secrets to `NEXT_PUBLIC_*`.
+Add the same environment variables in Vercel Project Settings â†’ Environment Variables. **Never** rename Binance secrets to `NEXT_PUBLIC_*`.
 
 ## Security
 
@@ -74,8 +74,17 @@ Add the same environment variables in Vercel Project Settings → Environment Va
 - v0.1 does not sign wallet transactions or broadcast trades.
 - `.env*` local secrets are gitignored.
 
-## Current limitation
+## Execution semantics
 
-Execution value is based on a synthetic current entry quote and full reverse quote for the requested USD notional. This measures current market friction; it is not a prediction of future return or a wallet-position liquidation guarantee.
+Underly v0.1 is intent-aware:
+
+- `BUY` — current entry quote + full reverse liquidity probe.
+- `HOLD` — no synthetic execution.
+- `SELL` — direct current exit quote using exact `tokenAmount` when supplied, otherwise an `amountUsd` fallback.
+- `COLLATERAL` — direct current liquidation-value analysis using the same quantity semantics.
+
+Execution diagnostics measure current conditions, not predicted future return.
+
+Underly is read-only and does not discover wallet holdings, sign transactions, approve tokens, or broadcast trades.
 
 See `docs/PRODUCT_SPEC.md`, `docs/API.md`, and `docs/DX_LOG.md`.

@@ -4,7 +4,7 @@ Underly is a read-only trust and execution-inspection layer for tokenized equiti
 
 ```text
 User/API request
-  ticker + intent + USD notional
+  ticker/contract + intent + intent-specific size
           |
           v
 Asset resolver
@@ -39,10 +39,10 @@ Measures current entry availability and a full reverse quote as a present-time l
 Does not manufacture a trade. It evaluates identity, wrapper data, reference conditions, session state, attestation and valuation from available non-execution data.
 
 ### SELL
-Treats `amountUsd` as current position notional. It derives an approximate token quantity using the current token price and requests a direct token-to-USDT quote. The response explicitly reports `quantitySource=DERIVED_FROM_TOKEN_PRICE`.
+Uses exact `tokenAmount` when supplied (`quantitySource=USER_SUPPLIED`). `amountUsd` remains a fallback that derives token quantity from the current token price (`quantitySource=DERIVED_FROM_TOKEN_PRICE`). SELL requests a direct token-to-USDT exit quote.
 
 ### COLLATERAL
-Uses the same direct liquidation mechanism as SELL but interprets the quote as current liquidation value for conservative valuation. Underly v0.1 does not recommend an LTV.
+Uses exact `tokenAmount` when supplied, or the same `amountUsd` fallback derivation used by SELL. The direct quote is interpreted as current liquidation value for conservative valuation. Underly v0.1 does not recommend an LTV.
 
 ## Rules
 - Missing data is UNKNOWN, never PASS.
@@ -52,10 +52,10 @@ Uses the same direct liquidation mechanism as SELL but interprets the quote as c
 - Findings are deterministic; no LLM decides severity.
 - Final visual design happens only after core behavior is validated.
 
-## Execution Explainability v0.2
+## Execution Explainability — included in schema v0.1
 BUY now exposes three separate measurements:
-1. entry — requested notional vs current RWA-price-marked value of acquired tokens;
-2. exit — marked value of acquired tokens vs current executable reverse-sell proceeds;
-3. roundTrip — requested notional vs current reverse-sell recovery.
+1. entry â€” requested notional vs current RWA-price-marked value of acquired tokens;
+2. exit â€” marked value of acquired tokens vs current executable reverse-sell proceeds;
+3. roundTrip â€” requested notional vs current reverse-sell recovery.
 
 SELL and COLLATERAL expose a direct exit/liquidation breakdown against the requested position notional. HOLD performs no execution probe.
