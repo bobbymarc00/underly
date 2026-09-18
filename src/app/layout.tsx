@@ -1,18 +1,22 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
+
 import "./globals.css";
-import { NewsDock } from "@/components/news/NewsDock";
+import "./terminal.css";
 
 export const metadata: Metadata = {
-  title: "Underly â€” Know what you really hold",
-  description: "Compare tokenized-equity wrappers across identity, pricing, execution, valuation, ActionGuard findings and evidence.",
+  title: "Underly — Know what you really hold",
+  description:
+    "Read-only tokenized-equity wrapper, market and wallet intelligence on BNB Smart Chain.",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html lang="en">
-      <body>{children}<NewsDock />
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
-
