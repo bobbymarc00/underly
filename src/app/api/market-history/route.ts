@@ -15,6 +15,7 @@ import {
 export const runtime = "nodejs";
 
 const MAX_LIMIT = 500;
+const UPSTREAM_CANDLE_LIMIT = 299;
 
 type SeriesStatus = "AVAILABLE" | "EMPTY" | "UNAVAILABLE";
 type OverallStatus = "AVAILABLE" | "PARTIAL" | "EMPTY" | "UNAVAILABLE";
@@ -130,6 +131,87 @@ function coverage(candles: NormalizedCandle[]) {
     firstTimestamp: candles[0]?.timestamp ?? null,
     lastTimestamp: candles[candles.length - 1]?.timestamp ?? null,
   };
+}
+
+function withinRequestedRange(
+  candle: NormalizedCandle,
+  start: number | null,
+  end: number | null,
+): boolean {
+  if (start !== null && candle.timestamp < start) return false;
+  if (end !== null && candle.timestamp > end) return false;
+  return true;
+}
+
+function candleBarMs(bar: CandleBar): number | null {
+  const match = bar.match(/^(\d+)(s|m|h|d|w)$/);
+  if (!match) return null;
+
+  const value = Number(match[1]);
+  const unit = match[2];
+  const multiplier =
+    unit === "s"
+      ? 1_000
+      : unit === "m"
+        ? 60_000
+        : unit === "h"
+          ? 3_600_000
+          : unit === "d"
+            ? 86_400_000
+            : 604_800_000;
+
+  return value * multiplier;
+}
+
+function requestWindows(
+  bar: CandleBar,
+  limit: number,
+  start: number | null,
+  end: number | null,
+): Array<{ start?: number; end?: number; limit: number }> {
+  const upstreamLimit = Math.min(limit, UPSTREAM_CANDLE_LIMIT);
+  const barMs = candleBarMs(bar);
+
+  if (start === null || end === null || barMs === null) {
+    return [
+      {
+        start: start ?? undefined,
+        end: end ?? undefined,
+        limit: upstreamLimit,
+      },
+    ];
+  }
+
+  const maxSpan = barMs * upstreamLimit;
+  if (end - start <= maxSpan) {
+    return [{ start, end, limit: upstreamLimit }];
+  }
+
+  const windows: Array<{ start: number; end: number; limit: number }> = [];
+  let cursor = start;
+
+  while (cursor < end) {
+    const chunkEnd = Math.min(end, cursor + maxSpan);
+    windows.push({
+      start: cursor,
+      end: chunkEnd,
+      limit: upstreamLimit,
+    });
+    if (chunkEnd === end) break;
+    cursor = chunkEnd;
+  }
+
+  return windows;
+}
+
+function dedupeCandles(candles: NormalizedCandle[]): NormalizedCandle[] {
+  const byTimestamp = new Map<number, NormalizedCandle>();
+  for (const candle of candles) {
+    byTimestamp.set(candle.timestamp, candle);
+  }
+  return Array.from(byTimestamp.values()).sort(
+    (a, b) => a.timestamp - b.timestamp,
+  );
 }
 
 function uniqueTimeline(series: HistoricalSeries[]): number[] {
@@ -354,35 +436,44 @@ export async function GET(request: NextRequest) {
     const series: HistoricalSeries[] = await Promise.all(
       matching.map(async (asset) => {
         try {
-          const envelope = await getCandles({
-            chainId,
-            contractAddress: asset.tokenContractAddress,
-            bar,
-            limit,
-            start: start ?? undefined,
-            end: end ?? undefined,
-          });
+          const windows = requestWindows(bar, limit, start, end);
+          const envelopes = await Promise.all(
+            windows.map((window) =>
+              getCandles({
+                chainId,
+                contractAddress: asset.tokenContractAddress,
+                bar,
+                limit: window.limit,
+                start: window.start,
+                end: window.end,
+              }),
+            ),
+          );
 
-          if (envelope.code !== 0) {
+          const failed = envelopes.find((envelope) => envelope.code !== 0);
+          if (failed) {
             return {
               provider: asset.platformId?.trim() || "unknown",
               symbol: asset.tokenSymbol,
               contractAddress: asset.tokenContractAddress,
               tokenShareRatio: asset.tokenToShareRatio ?? null,
               status: "UNAVAILABLE" as const,
-              upstreamCode: envelope.code,
-              upstreamMessage: envelope.msg,
+              upstreamCode: failed.code,
+              upstreamMessage: failed.msg,
               coverage: coverage([]),
               candles: [],
             };
           }
 
-          const candles = (envelope.data ?? [])
-            .map(normalizeCandle)
-            .filter(
-              (item): item is NormalizedCandle => item !== null,
-            )
-            .sort((a, b) => a.timestamp - b.timestamp);
+          const candles = dedupeCandles(
+            envelopes
+              .flatMap((envelope) => envelope.data ?? [])
+              .map(normalizeCandle)
+              .filter(
+                (item): item is NormalizedCandle => item !== null,
+              )
+              .filter((item) => withinRequestedRange(item, start, end)),
+          );
 
           return {
             provider: asset.platformId?.trim() || "unknown",
@@ -392,8 +483,8 @@ export async function GET(request: NextRequest) {
             status: candles.length
               ? ("AVAILABLE" as const)
               : ("EMPTY" as const),
-            upstreamCode: envelope.code,
-            upstreamMessage: envelope.msg,
+            upstreamCode: 0,
+            upstreamMessage: envelopes[0]?.msg ?? null,
             coverage: coverage(candles),
             candles,
           };
