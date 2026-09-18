@@ -27,16 +27,16 @@ describe("terminal surface consistency polish", () => {
     expect(css).toContain("padding-top: 42px");
   });
 
-  it("removes obsolete primary-chart copy from the landing boundary", () => {
+  it("keeps the current chart-free boundary copy", () => {
     const landing = file(
       "src/components/market/MarketLanding.tsx",
     );
 
-    expect(landing).toContain(
-      "Market-history evidence remains available through the read-only API.",
+    expect(landing).toMatch(
+      /Market-history evidence remains available through\s+the read-only API\./,
     );
-    expect(landing).toContain(
-      "Stock detail prioritizes wrapper intelligence",
+    expect(landing).toMatch(
+      /Stock detail prioritizes wrapper\s+intelligence/,
     );
     expect(landing).not.toContain(
       "Historical share-adjusted charts remain disabled",

@@ -5,16 +5,19 @@ const {
   listBscRwaTokensMock,
   getUnderlyingProfileMock,
   getUnderlyingMarketMock,
+  getRwaPriceMock,
 } = vi.hoisted(() => ({
   listBscRwaTokensMock: vi.fn(),
   getUnderlyingProfileMock: vi.fn(),
   getUnderlyingMarketMock: vi.fn(),
+  getRwaPriceMock: vi.fn(),
 }));
 
 vi.mock("@/lib/binance/rwa", () => ({
   listBscRwaTokens: listBscRwaTokensMock,
   getUnderlyingProfile: getUnderlyingProfileMock,
   getUnderlyingMarket: getUnderlyingMarketMock,
+  getRwaPrice: getRwaPriceMock,
 }));
 
 import { GET } from "@/app/api/company/route";
@@ -91,11 +94,30 @@ function market(overrides = {}) {
   };
 }
 
+function rwaPrice(referencePrice = "217.45") {
+  return {
+    code: 0,
+    msg: "success",
+    data: [
+      {
+        tokenPrice: referencePrice,
+        referencePrice,
+      },
+    ],
+  };
+}
+
 describe("/api/company v0.2", () => {
   beforeEach(() => {
     listBscRwaTokensMock.mockReset();
     getUnderlyingProfileMock.mockReset();
     getUnderlyingMarketMock.mockReset();
+    getRwaPriceMock.mockReset();
+    getRwaPriceMock.mockResolvedValue({
+      code: 50001,
+      msg: "price fallback unavailable",
+      data: null,
+    });
     vi.stubEnv("UNDERLY_CHAIN_ID", "56");
   });
 
@@ -231,6 +253,41 @@ describe("/api/company v0.2", () => {
     expect(payload.error).toBe(
       "Company profile and fundamentals unavailable for all wrappers",
     );
+  });
+
+  it("falls back to RWA Price reference when Underlying Market omits it", async () => {
+    mockUniverse();
+
+    getUnderlyingProfileMock
+      .mockResolvedValueOnce(profile())
+      .mockResolvedValueOnce(profile());
+
+    getUnderlyingMarketMock
+      .mockResolvedValueOnce(market({ referencePrice: "217.45" }))
+      .mockResolvedValueOnce(market({ referencePrice: null }));
+
+    getRwaPriceMock
+      .mockResolvedValueOnce(rwaPrice("217.45"))
+      .mockResolvedValueOnce(rwaPrice("217.45"));
+
+    const response = await GET(
+      new NextRequest("http://localhost/api/company?ticker=NVDA"),
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+
+    const bstock = payload.wrappers.find(
+      (item: { provider: string }) => item.provider === "bstock",
+    );
+
+    expect(bstock.fundamentals.referencePrice).toBe("217.45");
+    expect(bstock.fundamentalsSource.referencePrice).toBe("RWA_PRICE");
+
+    expect(payload.fundamentals.fields.referencePrice).toMatchObject({
+      value: "217.45",
+      status: "CONSENSUS",
+    });
   });
 
   it("maps universe upstream failures to 502", async () => {

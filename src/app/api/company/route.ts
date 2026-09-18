@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { canonicalNumericEvidence } from "@/lib/underly/evidence";
+import { normalizeDividendYield } from "@/lib/underly/dividend";
+
 import {
+  getRwaPrice,
   getUnderlyingMarket,
   getUnderlyingProfile,
   listBscRwaTokens,
@@ -76,7 +80,7 @@ function dedupeAssets(assets: RwaTokenListRow[]): RwaTokenListRow[] {
   return result;
 }
 
-function resolveField(evidence: FieldEvidence[]): ResolvedField {
+function resolveField(evidence: FieldEvidence[], numeric = false): ResolvedField {
   if (!evidence.length) {
     return {
       value: null,
@@ -85,7 +89,15 @@ function resolveField(evidence: FieldEvidence[]): ResolvedField {
     };
   }
 
-  const distinct = Array.from(new Set(evidence.map((item) => item.value)));
+  const distinct = Array.from(
+    new Set(
+      evidence.map((item) =>
+        numeric
+          ? canonicalNumericEvidence(item.value) ?? item.value
+          : item.value,
+      ),
+    ),
+  );
 
   if (distinct.length > 1) {
     return {
@@ -96,7 +108,7 @@ function resolveField(evidence: FieldEvidence[]): ResolvedField {
   }
 
   return {
-    value: distinct[0],
+    value: evidence[0].value,
     status: evidence.length === 1 ? "SINGLE_SOURCE" : "CONSENSUS",
     evidence,
   };
@@ -180,15 +192,18 @@ export async function GET(request: NextRequest) {
 
     const wrappers = await Promise.all(
       assets.map(async (asset) => {
-        const [profileResult, marketResult] = await Promise.allSettled([
+        const [profileResult, marketResult, priceResult] = await Promise.allSettled([
           getUnderlyingProfile(chainId, asset.tokenContractAddress),
           getUnderlyingMarket(chainId, asset.tokenContractAddress),
+          getRwaPrice(chainId, asset.tokenContractAddress),
         ]);
 
         const profileEnvelope =
           profileResult.status === "fulfilled" ? profileResult.value : null;
         const marketEnvelope =
           marketResult.status === "fulfilled" ? marketResult.value : null;
+        const priceEnvelope =
+          priceResult.status === "fulfilled" ? priceResult.value : null;
 
         const profileAvailable = profileEnvelope?.code === 0;
         const marketAvailable = marketEnvelope?.code === 0;
@@ -205,6 +220,18 @@ export async function GET(request: NextRequest) {
         const companyInfo: RwaCompanyInfo = profile.companyInfo ?? {};
         const fundamentals: RwaUnderlyingMarketFields =
           market.marketData ?? {};
+        const priceData =
+          priceEnvelope?.code === 0 ? priceEnvelope.data?.[0] ?? {} : {};
+        const marketReferencePrice = scalar(fundamentals.referencePrice);
+        const rwaPriceReferencePrice = scalar(priceData.referencePrice);
+        const resolvedReferencePrice =
+          marketReferencePrice ?? rwaPriceReferencePrice;
+        const referencePriceSource =
+          marketReferencePrice !== null
+            ? "UNDERLYING_MARKET"
+            : rwaPriceReferencePrice !== null
+              ? "RWA_PRICE"
+              : null;
 
         return {
           provider: asset.platformId?.trim() || "unknown",
@@ -231,12 +258,25 @@ export async function GET(request: NextRequest) {
                 )
               : [],
           },
-          fundamentals: Object.fromEntries(
-            FUNDAMENTAL_FIELDS.map((field) => [
-              field,
-              scalar(fundamentals[field]),
-            ]),
-          ) as Record<(typeof FUNDAMENTAL_FIELDS)[number], string | null>,
+          fundamentals: {
+            ...(Object.fromEntries(
+              FUNDAMENTAL_FIELDS.map((field) => [
+                field,
+                scalar(fundamentals[field]),
+              ]),
+            ) as Record<
+              (typeof FUNDAMENTAL_FIELDS)[number],
+              string | null
+            >),
+            referencePrice: resolvedReferencePrice,
+            dividendYieldPercent: normalizeDividendYield(
+              asset.platformId?.trim() || "unknown",
+              scalar(fundamentals.dividendYield),
+            ).normalizedPercent,
+          },
+          fundamentalsSource: {
+            referencePrice: referencePriceSource,
+          },
           marketSession: {
             tradingAvailable: market.statusInfo?.openState ?? null,
             status: market.statusInfo?.marketStatus ?? null,
@@ -270,6 +310,17 @@ export async function GET(request: NextRequest) {
                   ? String(marketResult.reason)
                   : null),
             },
+            price: {
+              endpoint: "RWA Price",
+              state: priceEnvelope?.code === 0 ? "AVAILABLE" : "UNAVAILABLE",
+              upstreamCode: priceEnvelope?.code ?? null,
+              upstreamMessage:
+                priceEnvelope?.msg ??
+                (priceResult.status === "rejected"
+                  ? String(priceResult.reason)
+                  : null),
+            },
+
           },
         };
       }),
@@ -325,7 +376,7 @@ export async function GET(request: NextRequest) {
             : [];
         });
 
-        return [field, resolveField(evidence)];
+        return [field, resolveField(evidence, true)];
       }),
     );
 

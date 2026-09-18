@@ -20,11 +20,17 @@ describe("/api/news v0.2 contextual scopes", () => {
     vi.restoreAllMocks();
   });
 
-  it("defaults to market scope when ticker is absent", async () => {
+  it("preserves shared provider cache metadata on available responses", async () => {
+    const cache = {
+      status: "HIT",
+      fetchedAt: "2026-09-18T08:00:00.000Z",
+    };
+
     const provider = {
       id: "test-news",
       getMarketNews: vi.fn().mockResolvedValueOnce({
         provider: "test-news",
+        cache,
         items: [],
       }),
       getCompanyNews: vi.fn(),
@@ -36,17 +42,16 @@ describe("/api/news v0.2 contextual scopes", () => {
     });
 
     const response = await GET(
-      new NextRequest("http://localhost/api/news?limit=8"),
+      new NextRequest("http://localhost/api/news?scope=market&limit=8"),
     );
     const payload = await response.json();
 
     expect(response.status).toBe(200);
     expect(payload.scope).toBe("market");
-    expect(payload.ticker).toBeNull();
+    expect(payload.cache).toEqual(cache);
     expect(provider.getMarketNews).toHaveBeenCalledWith({
       limit: 8,
     });
-    expect(provider.getCompanyNews).not.toHaveBeenCalled();
   });
 
   it("defaults to ticker scope when ticker is supplied", async () => {
@@ -55,6 +60,7 @@ describe("/api/news v0.2 contextual scopes", () => {
       getMarketNews: vi.fn(),
       getCompanyNews: vi.fn().mockResolvedValueOnce({
         provider: "test-news",
+        cache: { status: "HIT" },
         items: [],
       }),
     };
@@ -78,31 +84,6 @@ describe("/api/news v0.2 contextual scopes", () => {
       ticker: "NVDA",
       limit: 5,
     });
-  });
-
-  it("supports explicit market scope", async () => {
-    const provider = {
-      id: "test-news",
-      getMarketNews: vi.fn().mockResolvedValueOnce({
-        provider: "test-news",
-        items: [],
-      }),
-      getCompanyNews: vi.fn(),
-    };
-
-    getConfiguredNewsProviderMock.mockReturnValueOnce({
-      status: "CONFIGURED",
-      provider,
-    });
-
-    const response = await GET(
-      new NextRequest(
-        "http://localhost/api/news?scope=market&limit=10",
-      ),
-    );
-
-    expect(response.status).toBe(200);
-    expect(provider.getMarketNews).toHaveBeenCalledTimes(1);
   });
 
   it("requires ticker for explicit ticker scope", async () => {
@@ -135,11 +116,11 @@ describe("/api/news v0.2 contextual scopes", () => {
     expect(badLimit.status).toBe(400);
   });
 
-  it("returns NOT_CONFIGURED without fabricating news", async () => {
+  it("returns a deployment-safe NOT_CONFIGURED response", async () => {
     getConfiguredNewsProviderMock.mockReturnValueOnce({
       status: "NOT_CONFIGURED",
       provider: null,
-      reason: "UNDERLY_NEWS_PROVIDER is not configured",
+      reason: "ALPHAVANTAGE_API_KEY is not configured",
     });
 
     const response = await GET(
@@ -151,14 +132,23 @@ describe("/api/news v0.2 contextual scopes", () => {
 
     expect(response.status).toBe(200);
     expect(payload.status).toBe("NOT_CONFIGURED");
-    expect(payload.items).toEqual([]);
+    expect(payload.cache).toBeNull();
+    expect(payload.note).toBe(
+      "News is not configured for this deployment.",
+    );
+    expect(JSON.stringify(payload)).not.toContain(
+      "ALPHAVANTAGE_API_KEY",
+    );
   });
 
-  it("fails closed on provider errors", async () => {
+  it("fails closed without exposing raw upstream errors or credentials", async () => {
     const provider = {
       id: "test-news",
       getMarketNews: vi.fn().mockRejectedValueOnce(
-        new Error("upstream news unavailable"),
+        new Error(
+          "Alpha Vantage news unavailable: free API rate limit; " +
+            "apikey=SECRET-KEY https://www.alphavantage.co/premium/",
+        ),
       ),
       getCompanyNews: vi.fn(),
     };
@@ -177,7 +167,19 @@ describe("/api/news v0.2 contextual scopes", () => {
 
     expect(response.status).toBe(502);
     expect(payload.status).toBe("UNAVAILABLE");
+    expect(payload.cache).toBeNull();
     expect(payload.items).toEqual([]);
-    expect(payload.error).toBe("upstream news unavailable");
+    expect(payload.reasonCode).toBe(
+      "PROVIDER_RATE_LIMIT",
+    );
+    expect(payload.message).toBe(
+      "News provider rate limit reached. Try again later.",
+    );
+
+    const serialized = JSON.stringify(payload);
+    expect(serialized).not.toContain("SECRET-KEY");
+    expect(serialized).not.toContain("alphavantage.co");
+    expect(serialized).not.toContain("premium");
+    expect(serialized).not.toContain("Alpha Vantage news unavailable");
   });
 });

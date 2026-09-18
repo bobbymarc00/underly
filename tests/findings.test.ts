@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { buildFindings } from "../src/lib/underly/findings";
 import type { ExecutionResult } from "../src/lib/underly/execution";
 
@@ -144,5 +144,58 @@ describe("buildFindings", () => {
     expect(findings.filter((f) => f.code === "NON_TRADING_SESSION")).toHaveLength(1);
     expect(findings.find((f) => f.code === "NON_TRADING_SESSION")?.severity).toBe("critical");
   });
+
+  it("explains attestation-only passport gaps without turning UNKNOWN into PASS", () => {
+    const findings = buildFindings({
+      intent: "HOLD",
+      referenceGapPct: "0",
+      referenceUpstreamCode: 0,
+      marketOpen: true,
+      tokenShareRatioKnown: true,
+      attestationDaily: "UNKNOWN",
+      passportPartial: true,
+      passportMissingFields: [
+        "dailyAttestation",
+        "monthlyAttestation",
+      ],
+      execution: execution({
+        methodology: "NOT_APPLICABLE",
+        quantitySource: null,
+        tokenAmount: null,
+        entry: {
+          attempted: false,
+          available: null,
+          vendor: null,
+          errorCode: null,
+          errorMessage: null,
+        },
+        exit: {
+          attempted: false,
+          available: null,
+          vendor: null,
+          errorCode: null,
+          errorMessage: null,
+        },
+        executableValueUsd: null,
+        currentHaircutUsd: null,
+        currentHaircutPct: null,
+      }),
+    });
+
+    const finding = findings.find(
+      (item) => item.code === "WRAPPER_DATA_INCOMPLETE",
+    );
+
+    expect(finding?.severity).toBe("unknown");
+    expect(finding?.title).toBe(
+      "Attestation metadata is incomplete",
+    );
+    expect(finding?.message).toContain("daily attestation");
+    expect(finding?.message).toContain("monthly attestation");
+    expect(finding?.evidence).toEqual({
+      missingFields: "dailyAttestation, monthlyAttestation",
+    });
+  });
+
 });
 

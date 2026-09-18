@@ -67,6 +67,9 @@ export interface CompanyWrapper {
     concepts: string[];
   };
   fundamentals: Record<string, string | null>;
+  fundamentalsSource?: {
+    referencePrice: "UNDERLYING_MARKET" | "RWA_PRICE" | null;
+  };
   marketSession: {
     tradingAvailable: boolean | null;
     status: string | null;

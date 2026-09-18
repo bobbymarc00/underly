@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getConfiguredNewsProvider } from "@/lib/news/provider";
+import {
+  classifyNewsProviderFailure,
+} from "@/lib/news/public-error";
 import type { NewsScope } from "@/lib/news/types";
 
 export const runtime = "nodejs";
@@ -81,7 +84,7 @@ export async function GET(request: NextRequest) {
       provider: null,
       items: [],
       cache: null,
-      note: configured.reason,
+      note: "News is not configured for this deployment.",
     });
   }
 
@@ -128,6 +131,8 @@ export async function GET(request: NextRequest) {
             },
     });
   } catch (error) {
+    const failure = classifyNewsProviderFailure(error);
+
     return NextResponse.json(
       {
         version: "0.2",
@@ -138,10 +143,8 @@ export async function GET(request: NextRequest) {
         provider: configured.provider.id,
         cache: null,
         items: [],
-        error:
-          error instanceof Error
-            ? error.message
-            : "News provider request failed",
+        reasonCode: failure.reasonCode,
+        message: failure.publicMessage,
       },
       { status: 502 },
     );

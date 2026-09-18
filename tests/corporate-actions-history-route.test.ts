@@ -221,6 +221,12 @@ describe("/api/corporate-actions/history", () => {
     expect(payload.status).toBe("UNAVAILABLE");
     expect(payload.events).toEqual([]);
     expect(payload.sources).toEqual([]);
-    expect(payload.error).toBe("unexpected parser failure");
+    expect(payload.error).toBe(
+      "Historical corporate-action source temporarily unavailable",
+    );
+    expect(payload.reasonCode).toBe("PROVIDER_UNAVAILABLE");
+    expect(JSON.stringify(payload)).not.toContain(
+      "unexpected parser failure",
+    );
   });
 });

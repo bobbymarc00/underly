@@ -16,7 +16,7 @@ export function buildPassport(platform: string, profile: RwaProfile) {
     !profile.tokenToShareRatio ? "tokenShareRatio" : null,
     dailyStatus === "UNKNOWN" ? "dailyAttestation" : null,
     monthlyStatus === "UNKNOWN" ? "monthlyAttestation" : null,
-  ].filter(Boolean);
+  ].filter((value): value is string => Boolean(value));
 
   return {
     provider: platform,

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { providerLabel } from "@/lib/ui/format";
+import { selectHeadlineReference } from "@/lib/ui/reference-selection";
 import type {
   CompanyPayload,
   ResolvedField,
@@ -52,8 +53,15 @@ function plain(value: string | null, suffix = ""): string {
   return `${value}${suffix}`;
 }
 
+function referenceSourceLabel(
+  value: "UNDERLYING_MARKET" | "RWA_PRICE" | null | undefined,
+): string | null {
+  if (value === "UNDERLYING_MARKET") return "Underlying Market";
+  if (value === "RWA_PRICE") return "RWA Price";
+  return null;
+}
 function sessionLabel(value: boolean | null): string {
-  if (value === true) return "TRADING";
+  if (value === true) return "AVAILABLE";
   if (value === false) return "RESTRICTED";
   return "UNKNOWN";
 }
@@ -63,6 +71,38 @@ function statusTone(status: string): string {
   if (status === "PARTIAL" || status === "SINGLE_SOURCE") return "warn";
   if (status === "CONFLICT" || status === "UNAVAILABLE") return "bad";
   return "neutral";
+}
+
+function fieldEvidenceNote(
+  resolved: ResolvedField | null,
+  isMoney: boolean,
+): string | null {
+  if (!resolved) return null;
+
+  if (resolved.status === "UNKNOWN") {
+    return "No usable provider value";
+  }
+
+  if (resolved.status !== "CONFLICT") {
+    return null;
+  }
+
+  if (!resolved.evidence.length) {
+    return "Provider values disagree";
+  }
+
+  return resolved.evidence
+    .slice(0, 3)
+    .map((item) => {
+      const value = isMoney ? money(item.value) : plain(item.value);
+      return `${providerLabel(item.provider)} ${value}`;
+    })
+    .join(" · ");
+}
+
+function fundLikeIndustry(value: string | null): boolean {
+  if (!value) return false;
+  return /\b(?:ETF|FUND)\b/i.test(value);
 }
 
 export function StockTerminal({ ticker }: { ticker: string }) {
@@ -104,7 +144,8 @@ export function StockTerminal({ ticker }: { ticker: string }) {
   const industry = fieldValue(profile, "industry");
   const website = fieldValue(profile, "website");
   const description = fieldValue(profile, "description");
-  const reference = field(fundamentals, "referencePrice");
+  const reference = selectHeadlineReference(company?.wrappers ?? []);
+  const isFundLike = fundLikeIndustry(industry);
 
   const marketState = useMemo(() => {
     if (!company?.wrappers.length) return "UNKNOWN";
@@ -191,6 +232,15 @@ export function StockTerminal({ ticker }: { ticker: string }) {
               <div>
                 <span>REFERENCE</span>
                 <strong>{money(wrapper.fundamentals.referencePrice)}</strong>
+                {referenceSourceLabel(
+                  wrapper.fundamentalsSource?.referencePrice,
+                ) && (
+                  <small>
+                    {referenceSourceLabel(
+                      wrapper.fundamentalsSource?.referencePrice,
+                    )}
+                  </small>
+                )}
               </div>
               <div>
                 <span>TOKEN / SHARE</span>
@@ -201,11 +251,19 @@ export function StockTerminal({ ticker }: { ticker: string }) {
                 <strong>{plain(wrapper.fundamentals.peRatioTTM)}</strong>
               </div>
               <div>
-                <span>DIVIDEND YIELD</span>
-                <strong>{plain(wrapper.fundamentals.dividendYield)}</strong>
+                <span>DIVIDEND YIELD · NORMALIZED</span>
+                <strong>
+                  {plain(
+                    wrapper.fundamentals.dividendYieldPercent,
+                    "%",
+                  )}
+                </strong>
+                <small>
+                  raw {plain(wrapper.fundamentals.dividendYield)}
+                </small>
               </div>
               <div>
-                <span>SESSION</span>
+                <span>TRADING ACCESS</span>
                 <strong>
                   {sessionLabel(wrapper.marketSession.tradingAvailable)}
                 </strong>
@@ -220,20 +278,37 @@ export function StockTerminal({ ticker }: { ticker: string }) {
         <article className="tm-overview-panel">
           <div className="tm-panel-title">
             <span>UNDERLYING</span>
-            <h3>Company profile</h3>
+            <h3>Underlying profile</h3>
           </div>
           {description && (
             <p className="tm-company-description">{description}</p>
           )}
+
+          {isFundLike && (
+            <p className="tm-profile-context">
+              Fund-like underlying detected. Corporate-officer fields are not
+              shown when they are not meaningful for the asset type.
+            </p>
+          )}
+
           <div className="tm-company-meta">
             <div>
-              <span>Industry</span>
+              <span>{isFundLike ? "Asset type" : "Industry"}</span>
               <strong>{industry ?? "—"}</strong>
             </div>
-            <div>
-              <span>CEO</span>
-              <strong>{fieldValue(profile, "ceo") ?? "—"}</strong>
-            </div>
+
+            {isFundLike ? (
+              <div>
+                <span>Wrappers</span>
+                <strong>{company?.wrappers.length ?? "—"}</strong>
+              </div>
+            ) : (
+              <div>
+                <span>CEO</span>
+                <strong>{fieldValue(profile, "ceo") ?? "—"}</strong>
+              </div>
+            )}
+
             <div>
               <span>Website</span>
               {website ? (
@@ -280,6 +355,18 @@ export function StockTerminal({ ticker }: { ticker: string }) {
                   >
                     {resolved?.status ?? "UNKNOWN"}
                   </small>
+
+                  {fieldEvidenceNote(
+                    resolved,
+                    Boolean(isMoney),
+                  ) && (
+                    <em className="tm-field-evidence-note">
+                      {fieldEvidenceNote(
+                        resolved,
+                        Boolean(isMoney),
+                      )}
+                    </em>
+                  )}
                 </div>
               );
             })}
@@ -295,7 +382,7 @@ export function StockTerminal({ ticker }: { ticker: string }) {
           <strong>Evidence-first stock detail</strong>
         </div>
         <p>
-          Company evidence, standardized liquidity, current and historical
+          Underlying evidence, standardized liquidity, current and historical
           corporate actions, and on-demand HOLD proof are presented without
           ranking wrappers or creating transaction paths.
         </p>

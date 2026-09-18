@@ -195,6 +195,7 @@ export async function runFirewallCheck(request: FirewallCheckRequest) {
       tokenShareRatioKnown: integrity.tokenShareRatioKnown,
       attestationDaily: passport.attestation.daily,
       passportPartial: passport.dataCompleteness === "PARTIAL",
+      passportMissingFields: passport.missingFields,
       corporateActionStatus: corporateActions.status,
     });
 

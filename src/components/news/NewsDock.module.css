@@ -130,3 +130,13 @@
     width: auto;
   }
 }
+/* UNDERLY_NEWS_UNAVAILABLE_SPACING */
+.state {
+  display: grid;
+  gap: 6px;
+}
+
+.state strong,
+.state span {
+  display: block;
+}

@@ -30,7 +30,7 @@ describe("stock chart removal", () => {
     const terminal = file("src/components/market/StockTerminal.tsx");
 
     expect(terminal).toContain("Same underlying, separate evidence");
-    expect(terminal).toContain("Company profile");
+    expect(terminal).toContain("Underlying profile");
     expect(terminal).toContain("Resolved evidence");
   });
 });

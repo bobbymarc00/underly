@@ -699,7 +699,7 @@ export function StockIntelligencePanels({ ticker }: { ticker: string }) {
                   </small>
                 </div>
                 <div>
-                  <span>Yield normalized</span>
+                  <span>Provider yield · normalized</span>
                   <strong>
                     {percent(
                       actions.data?.dividendSnapshot.dividendYieldPercent.value,
@@ -716,6 +716,11 @@ export function StockIntelligencePanels({ ticker }: { ticker: string }) {
                 </div>
               </div>
 
+              <p className="tm-intel-note">
+                Dividend yield is provider-reported evidence normalized only
+                across verified provider unit conventions. It is not recomputed
+                or annualized by Underly.
+              </p>
               {actions.data?.currentEvents.length ? (
                 <div className="tm-current-events">
                   {actions.data.currentEvents.map((event, index) => (

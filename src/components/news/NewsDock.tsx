@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 
 import styles from "./NewsDock.module.css";
 
@@ -22,6 +22,11 @@ interface NewsItem {
   relatedTickers: TickerEvidence[];
 }
 
+type NewsReasonCode =
+  | "PROVIDER_RATE_LIMIT"
+  | "PROVIDER_TIMEOUT"
+  | "PROVIDER_UNAVAILABLE";
+
 interface NewsPayload {
   scope: "market" | "ticker";
   ticker: string | null;
@@ -29,7 +34,7 @@ interface NewsPayload {
   provider: string | null;
   items: NewsItem[];
   note?: string;
-  error?: string;
+  reasonCode?: NewsReasonCode;
 }
 
 function detailTicker(pathname: string): string | null {
@@ -54,20 +59,49 @@ function formatPublishedAt(value: string): string {
   }).format(date);
 }
 
+function unavailableCopy(
+  ticker: string | null,
+  reasonCode?: NewsReasonCode,
+): {
+  title: string;
+  detail: string;
+} {
+  const title = ticker
+    ? `${ticker} news temporarily unavailable`
+    : "Market news temporarily unavailable";
+
+  if (reasonCode === "PROVIDER_RATE_LIMIT") {
+    return {
+      title,
+      detail:
+        "The configured news provider has reached its request limit. Try again later.",
+    };
+  }
+
+  if (reasonCode === "PROVIDER_TIMEOUT") {
+    return {
+      title,
+      detail:
+        "The configured news provider did not respond in time. Try again later.",
+    };
+  }
+
+  return {
+    title,
+    detail:
+      "The configured news source is unavailable right now. No article was fabricated.",
+  };
+}
+
 export function NewsDock() {
   const pathname = usePathname();
-  const router = useRouter();
-  const ticker = useMemo(
-    () => detailTicker(pathname),
-    [pathname],
-  );
+  const ticker = useMemo(() => detailTicker(pathname), [pathname]);
   const isLanding = pathname === "/";
   const visible = isLanding || ticker !== null;
 
   const [payload, setPayload] =
     useState<NewsPayload | null>(null);
   const [loading, setLoading] = useState(false);
-  const [navTicker, setNavTicker] = useState("NVDA");
 
   useEffect(() => {
     if (!visible) return;
@@ -85,13 +119,13 @@ export function NewsDock() {
     })
       .then(async (response) => {
         const body = (await response.json()) as NewsPayload;
-        if (!response.ok) {
-          throw new Error(body.error ?? `HTTP ${response.status}`);
+        if (!response.ok && body.status !== "UNAVAILABLE") {
+          throw new Error(`HTTP ${response.status}`);
         }
         return body;
       })
       .then(setPayload)
-      .catch((error) => {
+      .catch(() => {
         if (controller.signal.aborted) return;
 
         setPayload({
@@ -100,10 +134,7 @@ export function NewsDock() {
           status: "UNAVAILABLE",
           provider: null,
           items: [],
-          error:
-            error instanceof Error
-              ? error.message
-              : "News request failed",
+          reasonCode: "PROVIDER_UNAVAILABLE",
         });
       })
       .finally(() => {
@@ -115,18 +146,14 @@ export function NewsDock() {
 
   if (!visible) return null;
 
-  function openTicker(event: FormEvent) {
-    event.preventDefault();
-    const normalized = navTicker.trim().toUpperCase();
-
-    if (!/^[A-Z0-9.-]{1,20}$/.test(normalized)) return;
-
-    router.push(`/stock/${encodeURIComponent(normalized)}`);
-  }
-
   const title = ticker
     ? `${ticker} related news`
     : "Stock market news";
+
+  const unavailable =
+    payload?.status === "UNAVAILABLE"
+      ? unavailableCopy(ticker, payload.reasonCode)
+      : null;
 
   return (
     <section className={styles.wrap} aria-label={title}>
@@ -142,36 +169,20 @@ export function NewsDock() {
               : "Latest financial-markets headlines for the UNDERLY landing page."}
           </p>
         </div>
-
-        {isLanding && (
-          <form className={styles.jump} onSubmit={openTicker}>
-            <input
-              aria-label="Open stock ticker"
-              value={navTicker}
-              onChange={(event) =>
-                setNavTicker(event.target.value.toUpperCase())
-              }
-              placeholder="NVDA"
-              maxLength={20}
-            />
-            <button type="submit">Open stock</button>
-          </form>
-        )}
       </div>
 
-      {loading && (
-        <div className={styles.state}>Loading news…</div>
-      )}
+      {loading && <div className={styles.state}>Loading news…</div>}
 
       {!loading && payload?.status === "NOT_CONFIGURED" && (
         <div className={styles.state}>
-          News provider is not configured.
+          News is not configured for this deployment.
         </div>
       )}
 
-      {!loading && payload?.status === "UNAVAILABLE" && (
+      {!loading && unavailable && (
         <div className={styles.state}>
-          {payload.error ?? "News is currently unavailable."}
+          <strong>{unavailable.title}</strong>
+          <span>{unavailable.detail}</span>
         </div>
       )}
 

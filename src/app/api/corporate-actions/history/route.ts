@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { getConfiguredCorporateActionHistoryProvider } from "@/lib/corporate-actions/provider";
 
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
       events: [],
       sources: [],
       cache: null,
-      note: configured.reason,
+      note: "Historical corporate-action history is not configured for this deployment.",
       separation: {
         currentActionGuardEndpoint: "/api/corporate-actions",
         historicalTimelineEndpoint:
@@ -100,9 +100,18 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    return NextResponse.json(payload, {
-      status: result.state === "UNAVAILABLE" ? 502 : 200,
-    });
+    if (result.state === "UNAVAILABLE") {
+      return NextResponse.json(
+        {
+          ...payload,
+          error:
+            "Historical corporate-action source temporarily unavailable",
+        },
+        { status: 502 },
+      );
+    }
+
+    return NextResponse.json(payload, { status: 200 });
   } catch (error) {
     return NextResponse.json(
       {
@@ -115,9 +124,8 @@ export async function GET(request: NextRequest) {
         sources: [],
         cache: null,
         error:
-          error instanceof Error
-            ? error.message
-            : "Historical corporate-action provider request failed",
+          "Historical corporate-action source temporarily unavailable",
+        reasonCode: "PROVIDER_UNAVAILABLE",
         separation: {
           currentActionGuardEndpoint: "/api/corporate-actions",
           historicalTimelineEndpoint:

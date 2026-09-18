@@ -1,4 +1,4 @@
-﻿import Decimal from "decimal.js";
+import Decimal from "decimal.js";
 import { THRESHOLDS } from "@/lib/rules/thresholds";
 import type { Finding, Intent } from "@/types";
 import type { ExecutionResult } from "./execution";
@@ -16,6 +16,7 @@ export function buildFindings(params: {
   tokenShareRatioKnown: boolean;
   attestationDaily: AttestationState;
   passportPartial: boolean;
+  passportMissingFields?: string[];
   corporateActionStatus?: CorporateActionStatus;
 }): Finding[] {
   const findings: Finding[] = [];
@@ -175,11 +176,33 @@ export function buildFindings(params: {
   }
 
   if (params.passportPartial) {
+    const missingFields = params.passportMissingFields ?? [];
+    const attestationOnly =
+      missingFields.length > 0 &&
+      missingFields.every(
+        (field) =>
+          field === "dailyAttestation" ||
+          field === "monthlyAttestation",
+      );
+    const labels = missingFields.map((field) => {
+      if (field === "dailyAttestation") return "daily attestation";
+      if (field === "monthlyAttestation") return "monthly attestation";
+      if (field === "tokenShareRatio") return "token/share ratio";
+      return field;
+    });
+
     findings.push({
       code: "WRAPPER_DATA_INCOMPLETE",
       severity: "unknown",
-      title: "Wrapper metadata is incomplete",
-      message: "Some wrapper integrity fields are unavailable; Underly will not treat missing data as a pass.",
+      title: attestationOnly
+        ? "Attestation metadata is incomplete"
+        : "Wrapper metadata is incomplete",
+      message: labels.length
+        ? `Missing: ${labels.join(", ")}. Underly will not treat missing data as a pass.`
+        : "Some wrapper integrity fields are unavailable; Underly will not treat missing data as a pass.",
+      evidence: missingFields.length
+        ? { missingFields: missingFields.join(", ") }
+        : undefined,
     });
   }
 
