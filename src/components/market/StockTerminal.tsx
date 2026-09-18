@@ -9,6 +9,7 @@ import type {
   ResolvedField,
 } from "@/lib/ui/market-types";
 
+import { ContinuityPanel } from "./ContinuityPanel";
 import { PreflightPanel } from "./PreflightPanel";
 import { StockIntelligencePanels } from "./StockIntelligencePanels";
 import { TerminalHeader } from "./TerminalHeader";
@@ -376,6 +377,8 @@ export function StockTerminal({ ticker }: { ticker: string }) {
       </section>
 
       <StockIntelligencePanels ticker={ticker} />
+
+      <ContinuityPanel ticker={ticker} />
 
       <PreflightPanel ticker={ticker} />
 

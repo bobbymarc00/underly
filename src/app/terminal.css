@@ -4118,3 +4118,323 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* UNDERLY_V05_CONTINUITY */
+.tm-continuity {
+  padding: 44px 0 0;
+}
+
+.tm-continuity-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(420px, .82fr);
+  gap: 34px;
+  align-items: end;
+  border-top: 1px solid var(--tm-line);
+  padding-top: 28px;
+}
+
+.tm-continuity-head h2 {
+  margin: 8px 0 10px;
+  max-width: 760px;
+  font-size: clamp(24px, 3vw, 38px);
+  letter-spacing: -.035em;
+}
+
+.tm-continuity-head p {
+  max-width: 720px;
+  margin: 0;
+  color: var(--tm-muted);
+  font-size: 10px;
+  line-height: 1.65;
+}
+
+.tm-continuity-form {
+  display: grid;
+  grid-template-columns: 1.35fr .7fr auto;
+  border: 1px solid var(--tm-line-strong);
+  background: #090b0b;
+}
+
+.tm-continuity-form label {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border-right: 1px solid var(--tm-line);
+}
+
+.tm-continuity-form label > span {
+  color: var(--tm-muted-2);
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.tm-continuity-form select,
+.tm-continuity-form input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--tm-text);
+  font: inherit;
+  font-size: 10px;
+}
+
+.tm-continuity-form select option {
+  background: #0b0d0d;
+  color: var(--tm-text);
+}
+
+.tm-continuity-form button {
+  border: 0;
+  background: var(--tm-accent);
+  color: #080a08;
+  padding: 0 16px;
+  font-size: 8px;
+  font-weight: 950;
+  letter-spacing: .07em;
+  cursor: pointer;
+}
+
+.tm-continuity-form button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.tm-continuity-boundary {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--tm-line);
+  color: var(--tm-muted-2);
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  line-height: 1.5;
+}
+
+.tm-continuity-empty,
+.tm-continuity-source-preview {
+  min-height: 96px;
+  margin-top: 16px;
+  border: 1px solid var(--tm-line);
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  padding: 18px;
+}
+
+.tm-continuity-empty span,
+.tm-continuity-source-preview span {
+  color: var(--tm-accent);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .09em;
+}
+
+.tm-continuity-empty strong,
+.tm-continuity-source-preview strong {
+  font-size: 12px;
+}
+
+.tm-continuity-source-preview small {
+  color: var(--tm-muted);
+  font-size: 8px;
+}
+
+.tm-continuity-summary {
+  margin-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  border: 1px solid var(--tm-line);
+}
+
+.tm-continuity-summary > span {
+  padding: 9px 12px;
+  border-right: 1px solid var(--tm-line);
+  color: var(--tm-muted);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .07em;
+}
+
+.tm-continuity-summary > span[data-state="AVAILABLE"] {
+  color: var(--tm-accent);
+}
+
+.tm-continuity-summary > span[data-state="PARTIAL"] {
+  color: var(--tm-yellow);
+}
+
+.tm-continuity-summary > span[data-state="UNAVAILABLE"] {
+  color: var(--tm-red);
+}
+
+.tm-continuity-source {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: 1.7fr repeat(3, 1fr);
+  border-top: 1px solid var(--tm-line);
+  border-left: 1px solid var(--tm-line);
+}
+
+.tm-continuity-source > div {
+  min-width: 0;
+  min-height: 84px;
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  padding: 13px;
+  border-right: 1px solid var(--tm-line);
+  border-bottom: 1px solid var(--tm-line);
+}
+
+.tm-continuity-source span,
+.tm-continuity-metrics span {
+  color: var(--tm-muted-2);
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: .07em;
+}
+
+.tm-continuity-source strong {
+  font-size: 12px;
+}
+
+.tm-continuity-source small,
+.tm-continuity-card-head small {
+  overflow: hidden;
+  color: var(--tm-muted-2);
+  font-size: 7px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tm-continuity-grid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.tm-continuity-card {
+  min-width: 0;
+  border: 1px solid var(--tm-line);
+  background: rgba(13, 16, 16, .92);
+}
+
+.tm-continuity-card-head {
+  min-height: 78px;
+  padding: 14px;
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+  border-bottom: 1px solid var(--tm-line);
+}
+
+.tm-continuity-card-head > div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.tm-continuity-card-head span {
+  color: var(--tm-accent);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.tm-continuity-card-head strong {
+  font-size: 17px;
+}
+
+.tm-continuity-card-head em {
+  border: 1px solid var(--tm-line);
+  padding: 5px 7px;
+  font-style: normal;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: .07em;
+}
+
+.tm-continuity-card-head em[data-state="AVAILABLE"] {
+  color: var(--tm-accent);
+}
+
+.tm-continuity-card-head em[data-state="UNAVAILABLE"] {
+  color: var(--tm-red);
+}
+
+.tm-continuity-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-left: 1px solid var(--tm-line);
+}
+
+.tm-continuity-metrics > div {
+  min-width: 0;
+  min-height: 76px;
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  padding: 11px;
+  border-right: 1px solid var(--tm-line);
+  border-bottom: 1px solid var(--tm-line);
+}
+
+.tm-continuity-metrics strong {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.tm-continuity-metrics strong[data-tone="positive"] {
+  color: var(--tm-accent);
+}
+
+.tm-continuity-metrics strong[data-tone="negative"] {
+  color: var(--tm-red);
+}
+
+.tm-continuity-note {
+  margin: 0;
+  padding: 11px 14px;
+  color: var(--tm-muted-2);
+  font-size: 8px;
+  line-height: 1.55;
+}
+
+@media (max-width: 1050px) {
+  .tm-continuity-head {
+    grid-template-columns: 1fr;
+  }
+
+  .tm-continuity-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .tm-continuity-form {
+    grid-template-columns: 1fr;
+  }
+
+  .tm-continuity-form label {
+    border-right: 0;
+    border-bottom: 1px solid var(--tm-line);
+  }
+
+  .tm-continuity-form button {
+    min-height: 46px;
+  }
+
+  .tm-continuity-source {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .tm-continuity-metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+}
