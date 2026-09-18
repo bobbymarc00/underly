@@ -77,3 +77,49 @@ export async function binanceSignedGet<T>(
 
   throw new BinanceTransportError("Unexpected Binance retry state");
 }
+export async function binanceSignedPost<T>(
+  apiPath: string,
+  body: unknown,
+): Promise<BinanceEnvelope<T>> {
+  const signedPath = `${BUILD_PREFIX}${apiPath}`;
+  const bodyText = JSON.stringify(body);
+
+  for (let attempt = 0; attempt <= MAX_RATE_LIMIT_RETRIES; attempt++) {
+    const timestamp = timestampIso();
+    const signature = signBinanceRequest({
+      timestamp,
+      method: "POST",
+      requestPath: signedPath,
+      body: bodyText,
+    });
+
+    const response = await fetch(`${ORIGIN}${signedPath}`, {
+      method: "POST",
+      headers: {
+        "X-OC-APIKEY": requiredEnv("BINANCE_WEB3_API_KEY"),
+        "X-OC-TIMESTAMP": timestamp,
+        "X-OC-SIGN": signature,
+        "X-OC-RECV-WINDOW": "60000",
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: bodyText,
+      cache: "no-store",
+    });
+
+    let payload: BinanceEnvelope<T>;
+    try {
+      payload = (await response.json()) as BinanceEnvelope<T>;
+    } catch {
+      throw new BinanceTransportError(
+        `Binance returned non-JSON HTTP ${response.status}`,
+      );
+    }
+
+    if (payload.code !== 42900) return payload;
+    if (attempt === MAX_RATE_LIMIT_RETRIES) return payload;
+    await sleep(retryDelayMs(response, attempt));
+  }
+
+  throw new BinanceTransportError("Unexpected Binance retry state");
+}
