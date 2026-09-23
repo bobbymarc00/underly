@@ -10,6 +10,7 @@ import type {
 } from "@/lib/ui/market-types";
 
 import { ContinuityPanel } from "./ContinuityPanel";
+import { ExecutionReadinessPanel } from "./ExecutionReadinessPanel";
 import { PreflightPanel } from "./PreflightPanel";
 import { StockIntelligencePanels } from "./StockIntelligencePanels";
 import { TerminalHeader } from "./TerminalHeader";
@@ -381,6 +382,8 @@ export function StockTerminal({ ticker }: { ticker: string }) {
       <ContinuityPanel ticker={ticker} />
 
       <PreflightPanel ticker={ticker} />
+
+      <ExecutionReadinessPanel key={ticker} ticker={ticker} />
 
       <section className="tm-shell tm-stock-next">
         <div>

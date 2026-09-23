@@ -62,7 +62,7 @@ interface LandingRankingsPayload {
 const TILE_LIMIT = 6;
 
 function formatUsd(value: number | null): string {
-  if (value === null || !Number.isFinite(value)) return "â€”";
+  if (value === null || !Number.isFinite(value)) return "—";
 
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -72,7 +72,7 @@ function formatUsd(value: number | null): string {
 }
 
 function formatCompactNumber(value: number | null): string {
-  if (value === null || !Number.isFinite(value)) return "â€”";
+  if (value === null || !Number.isFinite(value)) return "—";
 
   return new Intl.NumberFormat("en-US", {
     notation: "compact",
@@ -81,7 +81,7 @@ function formatCompactNumber(value: number | null): string {
 }
 
 function formatPct(value: number | null): string {
-  if (value === null || !Number.isFinite(value)) return "â€”";
+  if (value === null || !Number.isFinite(value)) return "—";
 
   const sign = value > 0 ? "+" : "";
   return `${sign}${value.toFixed(2)}%`;
@@ -241,7 +241,7 @@ export function MarketLanding() {
       return {
         multiWrapperCount: null,
         densestWrapperCount: null,
-        densestTickers: "â€”",
+        densestTickers: "—",
       };
     }
 
@@ -260,7 +260,7 @@ export function MarketLanding() {
         )
         .slice(0, 3)
         .map((item) => item.ticker)
-        .join(" Â· ") || "â€”";
+        .join(" · ") || "—";
 
     return {
       multiWrapperCount,
@@ -324,7 +324,7 @@ export function MarketLanding() {
             <h2>Market snapshot</h2>
           </div>
           <p className="tm-snapshot-note">
-            Coverage signals only Â· not price momentum
+            Coverage signals only · not price momentum
             or a wrapper ranking.
           </p>
         </div>
@@ -343,21 +343,21 @@ export function MarketLanding() {
           <article className="tm-snapshot-card tm-snapshot-card-hero">
             <span>UNIVERSE COVERAGE</span>
             <strong>
-              {universe?.summary.underlyingCount ?? "â€”"}
+              {universe?.summary.underlyingCount ?? "—"}
             </strong>
             <p>
               tokenized-equity underlyings discovered
               from the live RWA universe
             </p>
             <em>
-              BNB {universe?.chainId ?? "â€”"} Â· READ ONLY
+              BNB {universe?.chainId ?? "—"} · READ ONLY
             </em>
           </article>
 
           <article className="tm-snapshot-card tm-snapshot-card-accent">
             <span>MULTI-WRAPPER</span>
             <strong>
-              {snapshot.multiWrapperCount ?? "â€”"}
+              {snapshot.multiWrapperCount ?? "—"}
             </strong>
             <p>
               underlyings with more than one wrapper contract
@@ -367,7 +367,7 @@ export function MarketLanding() {
           <article className="tm-snapshot-card tm-snapshot-card-cyan">
             <span>WRAPPER CONTRACTS</span>
             <strong>
-              {universe?.summary.wrapperCount ?? "â€”"}
+              {universe?.summary.wrapperCount ?? "—"}
             </strong>
             <p>
               provider-specific wrappers visible to Underly
@@ -377,7 +377,7 @@ export function MarketLanding() {
           <article className="tm-snapshot-card tm-snapshot-card-orange">
             <span>PROVIDERS</span>
             <strong>
-              {universe?.summary.providerCount ?? "â€”"}
+              {universe?.summary.providerCount ?? "—"}
             </strong>
             <p>
               provider namespaces represented in the current universe
@@ -388,12 +388,12 @@ export function MarketLanding() {
             <span>DENSEST COVERAGE</span>
             <strong>
               {snapshot.densestWrapperCount === null
-                ? "â€”"
+                ? "—"
                 : `${snapshot.densestWrapperCount} wrappers`}
             </strong>
             <p>{snapshot.densestTickers}</p>
             <em>
-              coverage density Â· not a performance signal
+              coverage density · not a performance signal
             </em>
           </article>
         </div>
@@ -432,7 +432,7 @@ export function MarketLanding() {
                     ? "VOLUME"
                     : tab === "gainers"
                       ? "24H +"
-                      : "24H âˆ’"}
+                      : "24H −"}
                 </small>
               </button>
             ),
@@ -442,8 +442,8 @@ export function MarketLanding() {
         {activeLoading && (
           <div className="tm-board-loading">
             {activeTab === "hot"
-              ? "LOADING HOT MARKET SIGNALSâ€¦"
-              : "LOADING CROSS-WRAPPER MOVERSâ€¦"}
+              ? "LOADING HOT MARKET SIGNALS…"
+              : "LOADING CROSS-WRAPPER MOVERS…"}
           </div>
         )}
 
@@ -502,7 +502,7 @@ export function MarketLanding() {
                           {activeTab.toUpperCase()}{" "}
                           {String(index + 1).padStart(2, "0")}
                         </span>
-                        <em>OPEN â†—</em>
+                        <em>OPEN ↗</em>
                       </div>
 
                       <div className="tm-market-tab-tile-main">
@@ -520,7 +520,7 @@ export function MarketLanding() {
                             <small>
                               {item.moverEvidence.status ===
                               "CONSENSUS"
-                                ? `CONSENSUS Â· ${item.moverEvidence.wrapperSamples} WRAPPERS`
+                                ? `CONSENSUS · ${item.moverEvidence.wrapperSamples} WRAPPERS`
                                 : item.moverEvidence.status ===
                                     "SINGLE_SOURCE"
                                   ? "SINGLE SOURCE"
@@ -556,7 +556,7 @@ export function MarketLanding() {
                           BNB{" "}
                           {item.chainId ??
                             universe?.chainId ??
-                            "â€”"}
+                            "—"}
                         </small>
                       </div>
                     </Link>
@@ -567,8 +567,8 @@ export function MarketLanding() {
               <div className="tm-market-card-caption">
                 <span>
                   {activeTab === "hot"
-                    ? `VOLUME-RANKED ${hotRankings?.sample.volumeRanked ?? "â€”"}`
-                    : `MOVERS ${moverRankings?.sample.moversScanned ?? "â€”"}/${moverRankings?.sample.moverCandidates ?? "â€”"} Â· REJECTED ${moverRankings?.sample.moversRejected ?? "â€”"}`}
+                    ? `VOLUME-RANKED ${hotRankings?.sample.volumeRanked ?? "—"}`
+                    : `MOVERS ${moverRankings?.sample.moversScanned ?? "—"}/${moverRankings?.sample.moverCandidates ?? "—"} · REJECTED ${moverRankings?.sample.moversRejected ?? "—"}`}
                 </span>
                 <p>
                   {activeTab === "hot"
@@ -593,7 +593,7 @@ export function MarketLanding() {
           intelligence instead of a primary historical price chart.
         </p>
         <Link href="/inspect">
-          OPEN V0.1 INSPECTOR â†—
+          OPEN V0.1 INSPECTOR ↗
         </Link>
       </section>
     </main>

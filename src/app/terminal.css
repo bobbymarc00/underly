@@ -1204,6 +1204,320 @@ body {
   }
 }
 
+/* UNDERLY_V06_EXECUTION_READINESS */
+.tm-readiness {
+  padding: 44px 0 22px;
+}
+
+.tm-readiness-head {
+  display: grid;
+  grid-template-columns: minmax(0, .78fr) minmax(560px, 1.22fr);
+  gap: 34px;
+  align-items: end;
+  padding-top: 28px;
+  border-top: 1px solid var(--tm-line);
+}
+
+.tm-readiness-head h2 {
+  max-width: 700px;
+  margin: 8px 0 10px;
+  color: var(--tm-brand-text);
+  font-size: clamp(24px, 3vw, 38px);
+  letter-spacing: -.035em;
+}
+
+.tm-readiness-head p {
+  max-width: 700px;
+  margin: 0;
+  color: var(--tm-muted);
+  font-size: 10px;
+  line-height: 1.65;
+}
+
+.tm-readiness-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--tm-line-strong);
+  border-left: 1px solid var(--tm-line-strong);
+  background: #090b0b;
+}
+
+.tm-readiness-form label {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border-right: 1px solid var(--tm-line);
+  border-bottom: 1px solid var(--tm-line);
+}
+
+.tm-readiness-form .tm-readiness-wrapper-field {
+  grid-column: 1 / -1;
+}
+
+.tm-readiness-form label > span,
+.tm-readiness-summary span,
+.tm-readiness-identity span,
+.tm-readiness-evidence span,
+.tm-readiness-reasons > span,
+.tm-readiness-digest span {
+  color: var(--tm-muted-2);
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.tm-readiness-form input,
+.tm-readiness-form select {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--tm-text);
+  font: inherit;
+  font-size: 10px;
+}
+
+.tm-readiness-form select option {
+  background: #0b0d0d;
+  color: var(--tm-text);
+}
+
+.tm-readiness-form button {
+  grid-column: 1 / -1;
+  min-height: 42px;
+  border: 0;
+  border-right: 1px solid var(--tm-line-strong);
+  border-bottom: 1px solid var(--tm-line-strong);
+  background: var(--tm-accent);
+  color: #080a08;
+  font-size: 8px;
+  font-weight: 950;
+  letter-spacing: .07em;
+  cursor: pointer;
+}
+
+.tm-readiness-form button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.tm-readiness-boundary {
+  margin: 14px 0 0;
+  padding: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  border: 1px solid var(--tm-line);
+  color: var(--tm-muted-2);
+  font-size: 7px;
+  letter-spacing: .07em;
+  line-height: 1.5;
+}
+
+.tm-readiness-boundary strong {
+  color: var(--tm-yellow);
+}
+
+.tm-readiness-boundary span {
+  flex-basis: 100%;
+}
+
+.tm-readiness-empty {
+  min-height: 104px;
+  margin-top: 16px;
+  padding: 18px;
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  border: 1px solid var(--tm-line);
+}
+
+.tm-readiness-empty span {
+  color: var(--tm-accent);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .09em;
+}
+
+.tm-readiness-empty strong {
+  font-size: 12px;
+}
+
+.tm-readiness-empty small {
+  color: var(--tm-muted);
+  font-size: 8px;
+  overflow-wrap: anywhere;
+}
+
+.tm-readiness-result {
+  margin-top: 18px;
+}
+
+.tm-readiness-summary,
+.tm-readiness-identity,
+.tm-readiness-evidence {
+  display: grid;
+  border-top: 1px solid var(--tm-line);
+  border-left: 1px solid var(--tm-line);
+}
+
+.tm-readiness-summary {
+  grid-template-columns: .8fr 1fr 1fr;
+}
+
+.tm-readiness-identity {
+  margin-top: 14px;
+  grid-template-columns: .8fr .8fr .55fr 2fr;
+}
+
+.tm-readiness-evidence {
+  margin-top: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.tm-readiness-summary > div,
+.tm-readiness-identity > div,
+.tm-readiness-evidence > div {
+  min-width: 0;
+  min-height: 76px;
+  padding: 12px;
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  border-right: 1px solid var(--tm-line);
+  border-bottom: 1px solid var(--tm-line);
+}
+
+.tm-readiness-summary strong,
+.tm-readiness-identity strong,
+.tm-readiness-evidence strong {
+  font-size: 11px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.tm-readiness-summary strong[data-state="EXECUTION_READY"] {
+  color: var(--tm-accent);
+}
+
+.tm-readiness-summary strong[data-state="REVIEW"],
+.tm-readiness-summary strong[data-state="STALE / RECHECK REQUIRED"] {
+  color: var(--tm-yellow);
+}
+
+.tm-readiness-summary strong[data-state="BLOCKED"] {
+  color: var(--tm-red);
+}
+
+.tm-readiness-identity .tm-readiness-address strong {
+  font-size: 9px;
+}
+
+.tm-readiness-evidence small,
+.tm-readiness-digest small {
+  color: var(--tm-muted-2);
+  font-size: 7px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.tm-readiness-stale {
+  margin-top: 12px;
+  padding: 11px 13px;
+  display: grid;
+  gap: 4px;
+  border: 1px solid rgba(255, 192, 109, .28);
+  color: var(--tm-yellow);
+}
+
+.tm-readiness-stale span {
+  color: var(--tm-muted);
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.tm-readiness-reasons {
+  margin-top: 14px;
+  display: grid;
+  gap: 6px;
+}
+
+.tm-readiness-reasons > div {
+  padding: 9px 11px;
+  border-left: 2px solid var(--tm-line-strong);
+  background: rgba(255, 255, 255, .01);
+}
+
+.tm-readiness-reasons > div[data-severity="BLOCK"] {
+  border-left-color: var(--tm-red);
+}
+
+.tm-readiness-reasons > div[data-severity="REVIEW"] {
+  border-left-color: var(--tm-yellow);
+}
+
+.tm-readiness-reasons > div[data-severity="INFO"] {
+  border-left-color: var(--tm-accent);
+}
+
+.tm-readiness-reasons strong {
+  font-size: 8px;
+}
+
+.tm-readiness-reasons p {
+  margin: 4px 0 0;
+  color: var(--tm-muted);
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.tm-readiness-digest {
+  margin-top: 14px;
+  padding: 12px;
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--tm-line-strong);
+}
+
+.tm-readiness-digest strong {
+  color: var(--tm-accent);
+  font-family: monospace;
+  font-size: 9px;
+  overflow-wrap: anywhere;
+}
+
+.tm-readiness-freshness-note {
+  margin: 12px 0 0;
+  color: var(--tm-muted-2);
+  font-size: 7px;
+  line-height: 1.55;
+}
+
+@media (max-width: 1050px) {
+  .tm-readiness-head {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .tm-readiness-form,
+  .tm-readiness-summary,
+  .tm-readiness-identity,
+  .tm-readiness-evidence {
+    grid-template-columns: 1fr;
+  }
+
+  .tm-readiness-form .tm-readiness-wrapper-field {
+    grid-column: auto;
+  }
+
+  .tm-readiness-form button {
+    grid-column: auto;
+  }
+}
+
 /* Phase 1 chart-focus hotfix: preserve raw candles while avoiding outlier-dominated autoscaling. */
 .tm-chart-meta-row {
   min-height: 48px;
@@ -3322,7 +3636,7 @@ body {
   --tm-loser-line: rgba(255,140,148,.32);
 }
 
-/* Shared terminal identity ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â keep Inspector's legacy hero untouched. */
+/* Shared terminal identity — keep Inspector's legacy hero untouched. */
 .tm-app .tm-eyebrow,
 .tm-app .tm-section-head > div:first-child > span,
 .tm-app .tm-panel-title > span,
