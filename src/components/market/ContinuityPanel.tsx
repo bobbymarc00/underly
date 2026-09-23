@@ -16,6 +16,11 @@ type Deployment = {
   tokenShareRatio: string | null;
 };
 
+export interface ContinuityContext {
+  sourceContractAddress: string;
+  sourceTokenAmount: string;
+}
+
 type AssetGraphResponse = {
   underlyings?: Array<{
     ticker: string;
@@ -114,7 +119,13 @@ function continuityTone(
   return parsed > 0 ? "positive" : "negative";
 }
 
-export function ContinuityPanel({ ticker }: { ticker: string }) {
+export function ContinuityPanel({
+  ticker,
+  initialContext,
+}: {
+  ticker: string;
+  initialContext?: ContinuityContext | null;
+}) {
   const [deployments, setDeployments] = useState<Deployment[]>([]);
   const [sourceContract, setSourceContract] = useState("");
   const [sourceAmount, setSourceAmount] = useState("1");
@@ -127,8 +138,10 @@ export function ContinuityPanel({ ticker }: { ticker: string }) {
   useEffect(() => {
     const controller = new AbortController();
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset stale ticker/context state before async discovery
     setDeployments([]);
     setSourceContract("");
+    setSourceAmount("1");
     setResult(null);
     setDiscoveryError(null);
     setDiscovering(true);
@@ -151,7 +164,19 @@ export function ContinuityPanel({ ticker }: { ticker: string }) {
         setDeployments(next);
 
         if (next.length) {
-          setSourceContract(next[0].contractAddress);
+          const requestedSource = initialContext
+            ? next.find(
+                (deployment) =>
+                  deployment.contractAddress.toLowerCase() ===
+                  initialContext.sourceContractAddress.toLowerCase(),
+              )
+            : null;
+          if (requestedSource && initialContext) {
+            setSourceContract(requestedSource.contractAddress);
+            setSourceAmount(initialContext.sourceTokenAmount);
+          } else {
+            setSourceContract(next[0].contractAddress);
+          }
         }
       })
       .catch((caught) => {
@@ -170,7 +195,7 @@ export function ContinuityPanel({ ticker }: { ticker: string }) {
       });
 
     return () => controller.abort();
-  }, [ticker]);
+  }, [initialContext, ticker]);
 
   const selectedSource = useMemo(
     () =>
@@ -293,6 +318,15 @@ export function ContinuityPanel({ ticker }: { ticker: string }) {
         QUOTE ONLY · CURRENT SNAPSHOT · NO AUTOMATIC TARGET SELECTION · NO
         SIGNATURE · NO APPROVAL · NO BROADCAST
       </p>
+
+      {initialContext &&
+        selectedSource?.contractAddress.toLowerCase() ===
+          initialContext.sourceContractAddress.toLowerCase() && (
+          <p className="tm-continuity-context">
+            PORTFOLIO CONTEXT · SOURCE {selectedSource.symbol} · AMOUNT{" "}
+            {sourceAmount} · REVIEW BEFORE MEASURING
+          </p>
+        )}
 
       {discoveryError && (
         <div className="tm-callout tm-callout-error">

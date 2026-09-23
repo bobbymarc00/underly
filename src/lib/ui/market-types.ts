@@ -178,3 +178,206 @@ export interface WalletInspectorPayload {
     approvalRequired?: boolean;
   };
 }
+
+export type PortfolioEvidenceStatus =
+  | "AVAILABLE"
+  | "UNAVAILABLE"
+  | "ERROR"
+  | "INVALID";
+
+export interface PortfolioEvidenceRef {
+  source: string;
+  status: PortfolioEvidenceStatus;
+  reason: string | null;
+}
+
+export interface PortfolioPosition {
+  underlying: {
+    identity: string | null;
+    ticker: string | null;
+    name: string | null;
+    evidence: PortfolioEvidenceRef;
+  };
+  wrapper: {
+    provider: string;
+    symbol: string;
+    chainId: string;
+    contractAddress: string;
+  };
+  balance: {
+    status: "POSITIVE";
+    rawBaseUnits: string;
+    rawHex: string | null;
+    decimals: number | null;
+    quantity: string | null;
+    quantityStatus: PortfolioEvidenceStatus;
+    blockTag: string;
+    source: "EVM_JSON_RPC";
+  };
+  equivalence: {
+    tokenShareRatio: string | null;
+    underlyingEquivalentShares: string | null;
+    status: PortfolioEvidenceStatus;
+    evidence: PortfolioEvidenceRef;
+  };
+  valuation: {
+    tokenPriceUsd: string | null;
+    referencePriceUsd: string | null;
+    indicativeValueUsd: string | null;
+    referenceValueUsd: string | null;
+    status: PortfolioEvidenceStatus;
+    tokenPriceEvidence: PortfolioEvidenceRef;
+    referencePriceEvidence: PortfolioEvidenceRef;
+  };
+  marketSession: {
+    tradingAvailable: boolean | null;
+    status: string | null;
+    reasonCode: string | null;
+    reasonMessage: string | null;
+  } | null;
+  actionGuard: {
+    status: "CLEAR" | "ACTIVE" | "UNKNOWN";
+    reason: string | null;
+  } | null;
+  integrity: {
+    status: "PASS" | "WARN" | "BLOCKED" | "UNKNOWN" | "NOT_APPLICABLE";
+    dataCompleteness: "COMPLETE" | "PARTIAL";
+    missingFields: string[];
+  };
+  evidence: {
+    identity: PortfolioEvidenceRef;
+    decimals: PortfolioEvidenceRef;
+    ratio: PortfolioEvidenceRef;
+    tokenPrice: PortfolioEvidenceRef;
+    referencePrice: PortfolioEvidenceRef;
+    marketSession: PortfolioEvidenceRef;
+    actionGuard: PortfolioEvidenceRef;
+    integrity: PortfolioEvidenceRef;
+    sources: Record<string, PortfolioEvidenceRef>;
+  };
+}
+
+export interface PortfolioUnderlyingExposure {
+  identity: string;
+  ticker: string;
+  name: string | null;
+  positionCount: number;
+  wrapperContracts: string[];
+  underlyingEquivalentShares: string | null;
+  knownUnderlyingEquivalentShares: string;
+  indicativeValueUsd: string | null;
+  knownIndicativeValueUsd: string;
+  status: "AVAILABLE" | "PARTIAL";
+}
+
+export interface PortfolioPayload {
+  version: string;
+  generatedAt: string;
+  address: string;
+  chainId: string;
+  status: "AVAILABLE" | "PARTIAL" | "UNAVAILABLE" | "NOT_CONFIGURED";
+  scope?: "BSC_TOKENIZED_EQUITY_WRAPPERS_ONLY";
+  error?: string;
+  snapshot?: {
+    rpcChainId: string;
+    blockTag: string;
+    blockNumber: string;
+    blockTimestamp: string | number | null;
+    blockTimestampStatus: "AVAILABLE" | "UNAVAILABLE";
+    blockTimestampReason?: string;
+  };
+  universe?: {
+    source: string;
+    receivedCount: number;
+    validatedWrapperCount: number;
+    rejectedCount: number;
+    rejected: Array<{
+      contractAddress: string | null;
+      reason: string;
+    }>;
+  };
+  summary?: {
+    checkedWrapperCount: number;
+    positiveBalanceCount: number;
+    provenZeroBalanceCount: number;
+    failedBalanceCount: number;
+    metadataFailureCount: number;
+    positionCount: number;
+    underlyingCount: number;
+    indicativeValueUsd: string | null;
+    knownIndicativeValueUsd: string;
+    valuationStatus: "AVAILABLE" | "PARTIAL" | "UNAVAILABLE";
+  };
+  positions: PortfolioPosition[];
+  underlyingExposures: PortfolioUnderlyingExposure[];
+  balanceChecks: Array<{
+    chainId: string;
+    contractAddress: string;
+    blockTag: string;
+    status:
+      | "POSITIVE"
+      | "ZERO"
+      | "RPC_ERROR"
+      | "BALANCE_INVALID"
+      | "METADATA_UNAVAILABLE";
+    balanceBaseUnits: string | null;
+    error: string | null;
+  }>;
+  performance?: {
+    unit: "milliseconds";
+    totalBeforeSerializationMs: number;
+    stages: {
+      chainVerificationMs: number;
+      blockSnapshotMs: number;
+      universeDiscoveryMs: number;
+      balanceRpcMs: number;
+      metadataEnrichmentMs: number;
+      portfolioCalculationMs: number;
+    };
+    calls: {
+      rpc: {
+        chainVerification: number;
+        blockSnapshot: number;
+        multicallContractCode: number;
+        balanceBatches: number;
+        balanceOfInnerCalls: number;
+      };
+      provider: Record<
+        "price" | "profile" | "market",
+        {
+          calls: number;
+          cacheHits: number;
+          itemCount: number;
+          averageMs: number;
+          maximumMs: number;
+          errorCount: number;
+        }
+      > & { universe: number };
+    };
+    controls: {
+      balanceStrategy: "VERIFIED_BSC_MULTICALL3";
+      multicallBatchSize: number;
+      multicallConcurrency: number;
+      multicallTimeoutMs: number;
+      multicallContractCodeVerified: boolean;
+      metadataEntryConcurrency: number;
+      priceBatchSize: number;
+      profileCacheTtlMs: number;
+      balanceCache: "DISABLED";
+      priceCache: "DISABLED";
+      marketCache: "DISABLED";
+      upstreamTimeoutMs: number;
+    };
+  };
+  readOnly: {
+    enabled: boolean;
+    rpcMethods: string[];
+    transactionMethods: string[];
+    privateKeyRequired: boolean;
+    signatureRequired: boolean;
+    approvalRequired: boolean;
+    quoteRequested: boolean;
+    transactionBuilt: boolean;
+    simulationRequested: boolean;
+  };
+}

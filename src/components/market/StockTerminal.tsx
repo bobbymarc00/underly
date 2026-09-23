@@ -10,6 +10,7 @@ import type {
 } from "@/lib/ui/market-types";
 
 import { ContinuityPanel } from "./ContinuityPanel";
+import type { ContinuityContext } from "./ContinuityPanel";
 import { ExecutionReadinessPanel } from "./ExecutionReadinessPanel";
 import { PreflightPanel } from "./PreflightPanel";
 import { StockIntelligencePanels } from "./StockIntelligencePanels";
@@ -108,12 +109,19 @@ function fundLikeIndustry(value: string | null): boolean {
   return /\b(?:ETF|FUND)\b/i.test(value);
 }
 
-export function StockTerminal({ ticker }: { ticker: string }) {
+export function StockTerminal({
+  ticker,
+  continuityContext,
+}: {
+  ticker: string;
+  continuityContext?: ContinuityContext | null;
+}) {
   const [company, setCompany] = useState<CompanyPayload | null>(null);
   const [companyError, setCompanyError] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset stale ticker state before async company loading
     setCompany(null);
     setCompanyError(null);
 
@@ -379,7 +387,11 @@ export function StockTerminal({ ticker }: { ticker: string }) {
 
       <StockIntelligencePanels ticker={ticker} />
 
-      <ContinuityPanel ticker={ticker} />
+      {continuityContext ? (
+        <ContinuityPanel ticker={ticker} initialContext={continuityContext} />
+      ) : (
+        <ContinuityPanel ticker={ticker} />
+      )}
 
       <PreflightPanel ticker={ticker} />
 

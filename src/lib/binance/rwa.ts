@@ -110,11 +110,18 @@ export function listBscRwaTokens(chainId: string): Promise<BinanceEnvelope<RwaTo
   });
 }
 
-export function getRwaPrice(chainId: string, contract: string): Promise<BinanceEnvelope<RwaPriceRow[]>> {
+export function getRwaPrices(
+  chainId: string,
+  contracts: string[],
+): Promise<BinanceEnvelope<RwaPriceRow[]>> {
   return binanceSignedGet<RwaPriceRow[]>("/api/v1/dex/market/rwa/price", {
     binanceChainId: chainId,
-    tokenContractAddresses: contract,
+    tokenContractAddresses: contracts.join(","),
   });
+}
+
+export function getRwaPrice(chainId: string, contract: string): Promise<BinanceEnvelope<RwaPriceRow[]>> {
+  return getRwaPrices(chainId, [contract]);
 }
 
 export function getUnderlyingMarket(chainId: string, contract: string): Promise<BinanceEnvelope<RwaMarketData>> {
