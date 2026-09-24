@@ -12,7 +12,10 @@ export type ConfiguredWalletRpc =
       reason: string;
     };
 
-export function getConfiguredWalletRpc(): ConfiguredWalletRpc {
+export function getConfiguredWalletRpc(options?: {
+  signal?: AbortSignal;
+  timeoutMs?: number;
+}): ConfiguredWalletRpc {
   const rpcUrl = process.env.UNDERLY_RPC_URL?.trim();
 
   if (!rpcUrl) {
@@ -25,6 +28,6 @@ export function getConfiguredWalletRpc(): ConfiguredWalletRpc {
 
   return {
     status: "CONFIGURED",
-    rpc: createEvmReadOnlyRpc(rpcUrl),
+    rpc: createEvmReadOnlyRpc(rpcUrl, fetch, options),
   };
 }

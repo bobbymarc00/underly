@@ -84,6 +84,37 @@ function balance(
 }
 
 describe("unified portfolio engine", () => {
+  it("keeps missing universe coverage unavailable and distinct from proven zero", () => {
+    const missingUniverse = buildUnifiedPortfolio({
+      chainId: "56",
+      balances: [],
+      assets: [],
+    });
+    const provenZero = buildUnifiedPortfolio({
+      chainId: "56",
+      balances: [balance(CONTRACT_A, "0")],
+      assets: [],
+    });
+
+    expect(missingUniverse).toMatchObject({
+      status: "UNAVAILABLE",
+      summary: {
+        checkedWrapperCount: 0,
+        provenZeroBalanceCount: 0,
+        valuationStatus: "UNAVAILABLE",
+      },
+    });
+    expect(provenZero).toMatchObject({
+      status: "AVAILABLE",
+      balanceChecks: [expect.objectContaining({ status: "ZERO" })],
+      summary: {
+        checkedWrapperCount: 1,
+        provenZeroBalanceCount: 1,
+        valuationStatus: "AVAILABLE",
+      },
+    });
+  });
+
   it("derives an exact positive wrapper quantity, share equivalence, and value", () => {
     const result = buildUnifiedPortfolio({
       chainId: "56",

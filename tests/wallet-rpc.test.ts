@@ -90,4 +90,26 @@ describe("read-only EVM wallet RPC", () => {
     await expect(rpc.getChainId()).rejects.toThrow("RPC transport failed");
     await expect(rpc.getChainId()).rejects.not.toThrow("DO-NOT-LEAK");
   });
+
+  it("aborts a timed-out RPC fetch without exposing its URL", async () => {
+    const fetchMock = vi.fn(
+      async (_url: string | URL | Request, init?: RequestInit) =>
+        await new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener(
+            "abort",
+            () => reject(new DOMException("aborted", "AbortError")),
+            { once: true },
+          );
+        }),
+    );
+    const rpc = createEvmReadOnlyRpc(
+      "https://rpc.example/DO-NOT-LEAK",
+      fetchMock as typeof fetch,
+      { timeoutMs: 5 },
+    );
+
+    await expect(rpc.getBlockNumber()).rejects.toThrow("RPC request timed out");
+    await expect(rpc.getBlockNumber()).rejects.not.toThrow("DO-NOT-LEAK");
+    expect(fetchMock.mock.calls[0][1]?.signal?.aborted).toBe(true);
+  });
 });

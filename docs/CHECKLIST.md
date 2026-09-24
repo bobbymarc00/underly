@@ -137,3 +137,82 @@ Underly remains read-only. Deferred unless an explicit future product decision c
 - wallet private keys / seed phrases
 - token approvals
 - transaction signing/broadcast
+
+## v0.8-A — exposure intelligence
+
+- [x] empty BSC wrapper universe fails closed before balance reads
+- [x] proven-zero wallet remains distinct from missing universe coverage
+- [x] pure deterministic exposure engine with no network calls
+- [x] verified-underlying breakdown
+- [x] exact chain-and-contract wrapper breakdown
+- [x] source-provider breakdown without issuer inference
+- [x] known-value denominator and `knownValueWeightPct`
+- [x] partial/unknown valuation coverage remains explicit
+- [x] duplicate wrapper identity cannot be double-counted
+- [x] Decimal precision and deterministic sorting
+- [x] additive `/api/portfolio` response and runtime UI validation
+- [x] minimal wallet exposure overview
+- [x] no automatic quote, build, simulation, Continuity, signing, approval, or broadcast
+
+## v0.9-A — portfolio snapshot comparison
+
+- [x] two separately captured, runtime-validated `/api/portfolio` responses
+- [x] same normalized wallet address and chain required
+- [x] exact chain ID + contract address position identity
+- [x] verified underlying identity reused from v0.8
+- [x] deterministic Decimal-only quantity, share, price, and value differences
+- [x] snapshot-specific ratio and price; no retroactive normalization
+- [x] proven zero, unknown balance, and universe coverage gap remain distinct
+- [x] metadata/evidence conflicts block affected comparison dimensions
+- [x] comparable known-value subtotal uses only mutually valued exact wrappers
+- [x] snapshot totals and their original valuation coverage remain separate
+- [x] same/reversed block and unavailable timestamp semantics are explicit
+- [x] client-supplied provenance and non-persistence are explicit
+- [x] manual capture A/B and comparison in browser-session memory only
+- [x] wallet changes abort stale requests and clear old snapshots/results
+- [x] no localStorage, database, background polling, synthetic history, or P&L
+- [x] no automatic quote, build, simulation, Continuity, signing, approval, or broadcast
+
+## v1.0-A — product integration
+
+- [x] Discover through Readiness journey is discoverable without false active controls
+- [x] wallet/ticker changes clear or isolate stale asynchronous state
+- [x] Continuity, Preflight, and Readiness require explicit user actions
+- [x] wrapper selection preserves exact contract and provider identity
+- [x] provider is not presented as issuer or legal-rights evidence
+- [x] Execution Readiness remains distinct from execution capability
+- [x] provider limitations remain visible and do not promote `BLOCKED` to ready
+
+## v1.0-B — production reliability
+
+- [x] portfolio route declares a 60-second source duration and a 50-second internal deadline
+- [x] RPC/provider operations use bounded timeouts and propagated cancellation
+- [x] 429 retry waits are cancellable and actual HTTP attempts are observable
+- [x] pre-snapshot timeout fails explicitly without an invented snapshot
+- [x] post-snapshot enrichment failure becomes `PARTIAL` only with sufficient evidence
+- [x] every balance read still uses one explicit block tag
+- [x] stock detail shares one stale-safe Asset Graph discovery request
+- [x] no automatic quote, build, simulation, signing, approval, or broadcast
+
+## v1.0-C — deployment readiness verification
+
+- [x] checkpoint contents and exclusions reviewed
+- [x] source-verifiable deployment configuration documented
+- [ ] Vercel project, Production Branch, plan, and Fluid Compute confirmed in dashboard
+- [ ] effective `/api/portfolio` duration and Function region confirmed in dashboard
+- [ ] Production and Preview environment-variable scopes confirmed without exposing values
+- [ ] Preview acceptance smoke completed
+- [ ] separate production-deployment authorization received
+- [ ] production smoke and rollback observation window completed
+
+See `docs/DEPLOYMENT_READINESS_V1.0-C.md`. No deployment is authorized by this checklist.
+
+## v1.0-D — final lint gate
+
+- [x] local `.kilo` worktrees excluded from lint discovery
+- [x] local `.underly-patch-backups` excluded from lint discovery
+- [x] active `src`, `app`, and `tests` remain linted
+- [x] provider-filter reconciliation preserves selection and missing-provider reset
+- [x] empty/exact-contract search input clears discovery through the input event
+- [x] repository-wide ESLint passes with no errors
+- [x] regression tests cover the lint-safe state transitions

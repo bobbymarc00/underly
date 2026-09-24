@@ -99,6 +99,10 @@ function assertHexQuantity(value: unknown, label: string): string {
 export function createEvmReadOnlyRpc(
   rpcUrl: string,
   fetchImpl: typeof fetch = fetch,
+  options: {
+    signal?: AbortSignal;
+    timeoutMs?: number;
+  } = {},
 ): EvmReadOnlyRpc {
   if (!rpcUrl.trim()) {
     throw new WalletRpcError("RPC URL is not configured");
@@ -108,6 +112,21 @@ export function createEvmReadOnlyRpc(
 
   async function call(method: string, params: unknown[]): Promise<unknown> {
     requestId += 1;
+    const controller = new AbortController();
+    let timedOut = false;
+    const abortFromParent = () => controller.abort(options.signal?.reason);
+    if (options.signal?.aborted) {
+      abortFromParent();
+    } else {
+      options.signal?.addEventListener("abort", abortFromParent, { once: true });
+    }
+    const timeout =
+      options.timeoutMs === undefined
+        ? undefined
+        : setTimeout(() => {
+            timedOut = true;
+            controller.abort();
+          }, options.timeoutMs);
 
     let response: Response;
     try {
@@ -124,10 +143,19 @@ export function createEvmReadOnlyRpc(
           params,
         }),
         cache: "no-store",
+        signal: controller.signal,
       });
     } catch {
+      if (controller.signal.aborted) {
+        throw new WalletRpcError(
+          timedOut ? "RPC request timed out" : "RPC request aborted",
+        );
+      }
       // Do not include the RPC URL in errors because it may contain credentials.
       throw new WalletRpcError("RPC transport failed");
+    } finally {
+      if (timeout) clearTimeout(timeout);
+      options.signal?.removeEventListener("abort", abortFromParent);
     }
 
     if (!response.ok) {

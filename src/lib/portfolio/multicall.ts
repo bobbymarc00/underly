@@ -174,9 +174,20 @@ async function rpcRequest(params: {
   id: number;
   fetchImpl: typeof fetch;
   timeoutMs: number;
+  signal?: AbortSignal;
 }): Promise<unknown> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), params.timeoutMs);
+  let timedOut = false;
+  const abortFromParent = () => controller.abort(params.signal?.reason);
+  if (params.signal?.aborted) {
+    abortFromParent();
+  } else {
+    params.signal?.addEventListener("abort", abortFromParent, { once: true });
+  }
+  const timeout = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, params.timeoutMs);
   try {
     const response = await params.fetchImpl(params.rpcUrl, {
       method: "POST",
@@ -209,12 +220,15 @@ async function rpcRequest(params: {
     }
     return envelope.result;
   } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
-      throw new Error("Multicall RPC timed out");
+    if (controller.signal.aborted) {
+      throw new Error(
+        timedOut ? "Multicall RPC timed out" : "Multicall RPC aborted",
+      );
     }
     throw error;
   } finally {
     clearTimeout(timeout);
+    params.signal?.removeEventListener("abort", abortFromParent);
   }
 }
 
@@ -354,6 +368,7 @@ export async function inspectPortfolioSnapshotWithMulticall(params: {
   wrappers: WalletWrapperRef[];
   rpcUrl: string;
   fetchImpl?: typeof fetch;
+  signal?: AbortSignal;
 }): Promise<PortfolioMulticallInspection> {
   const fetchImpl = params.fetchImpl ?? fetch;
   const failAll = (reason: string, contractCodeChecks = 1) =>
@@ -386,6 +401,7 @@ export async function inspectPortfolioSnapshotWithMulticall(params: {
       id: 1,
       fetchImpl,
       timeoutMs: PORTFOLIO_MULTICALL_TIMEOUT_MS,
+      signal: params.signal,
     });
   } catch {
     return failAll("Multicall contract verification failed");
@@ -416,6 +432,7 @@ export async function inspectPortfolioSnapshotWithMulticall(params: {
           id: batchIndex + 2,
           fetchImpl,
           timeoutMs: PORTFOLIO_MULTICALL_TIMEOUT_MS,
+          signal: params.signal,
         });
         const decoded = decodeAggregate3(result, batch.length);
         return decoded.map((item, index) => {

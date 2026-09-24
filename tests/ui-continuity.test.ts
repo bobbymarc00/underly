@@ -17,12 +17,14 @@ describe("Underly v0.5 continuity UI", () => {
       'import { ContinuityPanel } from "./ContinuityPanel";',
     );
     expect(terminal).toContain(
-      "<ContinuityPanel ticker={ticker} />",
+      "<ContinuityPanel ticker={ticker} discovery={wrapperDiscovery} />",
     );
   });
 
-  it("discovers wrappers and calls the quote-only continuity route", () => {
-    expect(panel).toContain("/api/asset-graph?ticker=");
+  it("uses shared wrapper discovery and calls the quote-only continuity route", () => {
+    expect(terminal).toContain("/api/asset-graph?ticker=");
+    expect(panel).not.toContain("/api/asset-graph?ticker=");
+    expect(panel).toContain("discovery: {");
     expect(panel).toContain('fetch("/api/continuity"');
     expect(panel).toContain("sourceContractAddress");
     expect(panel).toContain("sourceTokenAmount");
@@ -35,5 +37,14 @@ describe("Underly v0.5 continuity UI", () => {
     expect(panel).not.toContain("broadcastTransaction");
     expect(panel).not.toContain("eth_sendRawTransaction");
     expect(panel).not.toContain('name="privateKey"');
+  });
+
+  it("invalidates stale requests and keeps wrapper identity exact", () => {
+    expect(panel).toContain("requestSequenceRef");
+    expect(panel).toContain("requestControllerRef.current?.abort()");
+    expect(panel).toContain("signal: controller.signal");
+    expect(panel).toContain("Continuity response context mismatch");
+    expect(panel).toContain("invalidateRequest()");
+    expect(panel).toContain("{deployment.contractAddress}");
   });
 });

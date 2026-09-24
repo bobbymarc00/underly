@@ -2,6 +2,7 @@ import "server-only";
 
 import Decimal from "decimal.js";
 
+import { BinanceRequestAbortedError } from "@/lib/binance/client";
 import {
   getRwaPrices,
   getUnderlyingMarket,
@@ -50,6 +51,10 @@ export interface PortfolioUniverseEntry {
 }
 
 export interface PortfolioUniversePreparation {
+  status: "AVAILABLE" | "PARTIAL" | "UNAVAILABLE";
+  reason: string | null;
+  receivedCount: number;
+  chainCandidateCount: number;
   entries: PortfolioUniverseEntry[];
   rejected: Array<{
     contractAddress: string | null;
@@ -63,6 +68,7 @@ export interface PortfolioProviderObservation {
   status: PortfolioEvidenceStatus;
   itemCount: number;
   cache: "BYPASS" | "HIT" | "MISS";
+  httpAttempts: number;
 }
 
 interface Captured<T> {
@@ -122,6 +128,9 @@ export function preparePortfolioUniverse(
   rows: RwaTokenListRow[],
   chainId: string,
 ): PortfolioUniversePreparation {
+  const chainCandidateCount = rows.filter(
+    (row) => String(row.binanceChainId) === chainId,
+  ).length;
   const wrappers = prepareWalletWrappers(rows, chainId).filter((wrapper) =>
     isEvmAddress(wrapper.contractAddress),
   );
@@ -158,35 +167,31 @@ export function preparePortfolioUniverse(
     });
   }
 
-  return { entries, rejected };
-}
-
-async function withTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number,
-): Promise<T> {
-  let timeout: ReturnType<typeof setTimeout> | undefined;
-  try {
-    return await Promise.race([
-      promise,
-      new Promise<never>((_, reject) => {
-        timeout = setTimeout(
-          () => reject(new Error("UPSTREAM_TIMEOUT")),
-          timeoutMs,
-        );
-      }),
-    ]);
-  } finally {
-    if (timeout) clearTimeout(timeout);
-  }
+  return {
+    status:
+      entries.length === 0
+        ? "UNAVAILABLE"
+        : rejected.length > 0
+          ? "PARTIAL"
+          : "AVAILABLE",
+    reason:
+      entries.length === 0
+        ? "NO_VALIDATED_WRAPPERS_FOR_CONFIGURED_CHAIN"
+        : rejected.length > 0
+          ? "UNIVERSE_ROWS_REJECTED"
+          : null,
+    receivedCount: rows.length,
+    chainCandidateCount,
+    entries,
+    rejected,
+  };
 }
 
 async function captureEnvelope<T>(params: {
   request: Promise<{ code: number; msg: string; data: T }>;
-  timeoutMs: number;
 }): Promise<Captured<T>> {
   try {
-    const envelope = await withTimeout(params.request, params.timeoutMs);
+    const envelope = await params.request;
     if (envelope.code !== 0) {
       return {
         status: "ERROR",
@@ -203,8 +208,10 @@ async function captureEnvelope<T>(params: {
       status: "ERROR",
       value: null,
       reason:
-        error instanceof Error && error.message === "UPSTREAM_TIMEOUT"
-          ? "UPSTREAM_TIMEOUT"
+        error instanceof BinanceRequestAbortedError
+          ? error.reason === "TIMEOUT"
+            ? "UPSTREAM_TIMEOUT"
+            : "UPSTREAM_ABORTED"
           : "UPSTREAM_REQUEST_FAILED",
     };
   }
@@ -213,15 +220,14 @@ async function captureEnvelope<T>(params: {
 async function observeEnvelope<T>(params: {
   endpoint: PortfolioProviderObservation["endpoint"];
   request: Promise<{ code: number; msg: string; data: T }>;
-  timeoutMs: number;
   observe?: (observation: PortfolioProviderObservation) => void;
   itemCount?: number;
   cache?: PortfolioProviderObservation["cache"];
+  httpAttempts: () => number;
 }): Promise<Captured<T>> {
   const startedAt = performance.now();
   const captured = await captureEnvelope({
     request: params.request,
-    timeoutMs: params.timeoutMs,
   });
   params.observe?.({
     endpoint: params.endpoint,
@@ -229,6 +235,7 @@ async function observeEnvelope<T>(params: {
     status: captured.status,
     itemCount: params.itemCount ?? 1,
     cache: params.cache ?? "BYPASS",
+    httpAttempts: params.httpAttempts(),
   });
   return captured;
 }
@@ -260,6 +267,7 @@ async function cachedProfile(params: {
   entry: PortfolioUniverseEntry;
   timeoutMs: number;
   observe?: (observation: PortfolioProviderObservation) => void;
+  signal?: AbortSignal;
 }): Promise<Captured<RwaProfile>> {
   const key = profileCacheKey(params.entry);
   const now = Date.now();
@@ -271,6 +279,7 @@ async function cachedProfile(params: {
       status: cached.captured.status,
       itemCount: 1,
       cache: "HIT",
+      httpAttempts: 0,
     });
     return {
       ...cached.captured,
@@ -279,15 +288,23 @@ async function cachedProfile(params: {
   }
   if (cached) profileCache.delete(key);
 
+  let httpAttempts = 0;
   const profileRaw = await observeEnvelope({
     endpoint: "profile",
     request: getUnderlyingProfile(
       params.entry.wrapper.chainId,
       params.entry.wrapper.contractAddress,
+      {
+        signal: params.signal,
+        timeoutMs: params.timeoutMs,
+        onAttempt: () => {
+          httpAttempts += 1;
+        },
+      },
     ),
-    timeoutMs: params.timeoutMs,
     observe: params.observe,
     cache: "MISS",
+    httpAttempts: () => httpAttempts,
   });
   const profile = validateProfile(profileRaw, params.entry);
   if (profile.status === "AVAILABLE") {
@@ -397,29 +414,41 @@ export async function enrichPortfolioMetadata(params: {
   concurrency?: number;
   timeoutMs?: number;
   observe?: (observation: PortfolioProviderObservation) => void;
+  signal?: AbortSignal;
 }): Promise<PortfolioAssetMetadata[]> {
   const timeoutMs = params.timeoutMs ?? 10_000;
   const entries = uniqueEntries(params.entries);
   const priceBatches = chunks(entries, PRICE_BATCH_SIZE);
   const pricesPromise = Promise.all(
-    priceBatches.map(async (batch) => ({
-      contracts: batch.map((entry) => entry.wrapper.contractAddress),
-      captured: await observeEnvelope({
-        endpoint: "price",
-        request: getRwaPrices(
-          batch[0].wrapper.chainId,
-          batch.map((entry) => entry.wrapper.contractAddress),
-        ),
-        timeoutMs,
-        observe: params.observe,
-        itemCount: batch.length,
-      }),
-    })),
+    priceBatches.map(async (batch) => {
+      let httpAttempts = 0;
+      return {
+        contracts: batch.map((entry) => entry.wrapper.contractAddress),
+        captured: await observeEnvelope({
+          endpoint: "price",
+          request: getRwaPrices(
+            batch[0].wrapper.chainId,
+            batch.map((entry) => entry.wrapper.contractAddress),
+            {
+              signal: params.signal,
+              timeoutMs,
+              onAttempt: () => {
+                httpAttempts += 1;
+              },
+            },
+          ),
+          observe: params.observe,
+          itemCount: batch.length,
+          httpAttempts: () => httpAttempts,
+        }),
+      };
+    }),
   );
   return mapWithConcurrency(
     entries,
     params.concurrency ?? 3,
     async (entry) => {
+      let marketHttpAttempts = 0;
       const [priceResults, marketRaw, profile] = await Promise.all([
         pricesPromise,
         observeEnvelope({
@@ -427,14 +456,22 @@ export async function enrichPortfolioMetadata(params: {
           request: getUnderlyingMarket(
             entry.wrapper.chainId,
             entry.wrapper.contractAddress,
+            {
+              signal: params.signal,
+              timeoutMs,
+              onAttempt: () => {
+                marketHttpAttempts += 1;
+              },
+            },
           ),
-          timeoutMs,
           observe: params.observe,
+          httpAttempts: () => marketHttpAttempts,
         }),
         cachedProfile({
           entry,
           timeoutMs,
           observe: params.observe,
+          signal: params.signal,
         }),
       ]);
       const priceBatch = priceResults.find((batch) =>

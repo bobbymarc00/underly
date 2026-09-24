@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { BinanceRequestAbortedError } from "@/lib/binance/client";
 import { listBscRwaTokens } from "@/lib/binance/rwa";
 import {
   enrichPortfolioMetadata,
@@ -18,17 +19,34 @@ import {
   type PortfolioBalanceInput,
 } from "@/lib/underly/portfolio";
 import {
+  buildPortfolioExposureIntelligence,
+  emptyPortfolioExposureIntelligence,
+} from "@/lib/underly/portfolio-intelligence";
+import {
   isEvmAddress,
   normalizeEvmAddress,
   parseHexQuantity,
+  WalletRpcError,
 } from "@/lib/wallet/evm-rpc";
 import { getConfiguredWalletRpc } from "@/lib/wallet/provider";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 const BSC_CHAIN_ID = "56";
 const UPSTREAM_TIMEOUT_MS = 10_000;
+const PORTFOLIO_REQUEST_DEADLINE_MS = 50_000;
+const RPC_REQUEST_TIMEOUT_MS = 10_000;
 const METADATA_ENTRY_CONCURRENCY = 4;
+
+type PortfolioStage =
+  | "CONFIGURATION"
+  | "CHAIN_VERIFICATION"
+  | "BLOCK_SNAPSHOT"
+  | "UNIVERSE_DISCOVERY"
+  | "BALANCE_SNAPSHOT"
+  | "METADATA_ENRICHMENT"
+  | "CALCULATION";
 
 function elapsed(startedAt: number): number {
   return Number((performance.now() - startedAt).toFixed(2));
@@ -45,6 +63,10 @@ function providerMetrics(
   const total = durations.reduce((sum, duration) => sum + duration, 0);
   return {
     calls: matches.filter((observation) => observation.cache !== "HIT").length,
+    httpAttempts: matches.reduce(
+      (sum, observation) => sum + observation.httpAttempts,
+      0,
+    ),
     cacheHits: matches.filter((observation) => observation.cache === "HIT").length,
     itemCount: matches.reduce(
       (sum, observation) => sum + observation.itemCount,
@@ -69,21 +91,28 @@ function jsonNoStore(body: unknown, status = 200) {
   });
 }
 
-async function withTimeout<T>(promise: Promise<T>): Promise<T> {
-  let timeout: ReturnType<typeof setTimeout> | undefined;
-  try {
-    return await Promise.race([
-      promise,
-      new Promise<never>((_, reject) => {
-        timeout = setTimeout(
-          () => reject(new Error("UPSTREAM_TIMEOUT")),
-          UPSTREAM_TIMEOUT_MS,
-        );
-      }),
-    ]);
-  } finally {
-    if (timeout) clearTimeout(timeout);
+function portfolioRequestControl(parentSignal: AbortSignal) {
+  const controller = new AbortController();
+  let deadlineExceeded = false;
+  const abortFromClient = () => controller.abort(parentSignal.reason);
+  if (parentSignal.aborted) {
+    abortFromClient();
+  } else {
+    parentSignal.addEventListener("abort", abortFromClient, { once: true });
   }
+  const deadline = setTimeout(() => {
+    deadlineExceeded = true;
+    controller.abort();
+  }, PORTFOLIO_REQUEST_DEADLINE_MS);
+
+  return {
+    signal: controller.signal,
+    deadlineExceeded: () => deadlineExceeded,
+    dispose: () => {
+      clearTimeout(deadline);
+      parentSignal.removeEventListener("abort", abortFromClient);
+    },
+  };
 }
 
 function readOnlyBoundary(rpcMethods: string[]) {
@@ -110,7 +139,7 @@ function unavailable(params: {
 }) {
   return jsonNoStore(
     {
-      version: "0.7-A",
+      version: "0.8-A",
       generatedAt: params.generatedAt,
       address: params.address,
       chainId: BSC_CHAIN_ID,
@@ -118,6 +147,7 @@ function unavailable(params: {
       error: params.error,
       positions: [],
       underlyingExposures: [],
+      exposures: emptyPortfolioExposureIntelligence("UNAVAILABLE"),
       balanceChecks: [],
       ...params.extra,
       readOnly: readOnlyBoundary(params.rpcMethods ?? []),
@@ -140,32 +170,45 @@ export async function GET(request: NextRequest) {
 
   const address = normalizeEvmAddress(suppliedAddress);
   const generatedAt = new Date().toISOString();
-  const configuredRpc = getConfiguredWalletRpc();
-  if (configuredRpc.status === "NOT_CONFIGURED") {
-    return jsonNoStore(
-      {
-        version: "0.7-A",
-        generatedAt,
-        address,
-        chainId: BSC_CHAIN_ID,
-        status: "NOT_CONFIGURED",
-        error: "READ_ONLY_RPC_NOT_CONFIGURED",
-        positions: [],
-        underlyingExposures: [],
-        balanceChecks: [],
-        readOnly: readOnlyBoundary([
-          "eth_chainId",
-          "eth_blockNumber",
-          "eth_getCode",
-          "eth_call",
-        ]),
-      },
-      503,
-    );
-  }
-
-  const rpc = configuredRpc.rpc;
+  const requestControl = portfolioRequestControl(request.signal);
+  let stage: PortfolioStage = "CONFIGURATION";
+  let snapshotEstablished = false;
+  let establishedSnapshot: {
+    rpcChainId: string;
+    blockTag: string;
+    blockNumber: string;
+  } | null = null;
   try {
+    const configuredRpc = getConfiguredWalletRpc({
+      signal: requestControl.signal,
+      timeoutMs: RPC_REQUEST_TIMEOUT_MS,
+    });
+    if (configuredRpc.status === "NOT_CONFIGURED") {
+      return jsonNoStore(
+        {
+          version: "0.8-A",
+          generatedAt,
+          address,
+          chainId: BSC_CHAIN_ID,
+          status: "NOT_CONFIGURED",
+          error: "READ_ONLY_RPC_NOT_CONFIGURED",
+          positions: [],
+          underlyingExposures: [],
+          exposures: emptyPortfolioExposureIntelligence("UNAVAILABLE"),
+          balanceChecks: [],
+          readOnly: readOnlyBoundary([
+            "eth_chainId",
+            "eth_blockNumber",
+            "eth_getCode",
+            "eth_call",
+          ]),
+        },
+        503,
+      );
+    }
+
+    const rpc = configuredRpc.rpc;
+    stage = "CHAIN_VERIFICATION";
     const chainStartedAt = performance.now();
     const rpcChainId = parseHexQuantity(await rpc.getChainId()).toString(10);
     const chainVerificationMs = elapsed(chainStartedAt);
@@ -182,12 +225,23 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    stage = "BLOCK_SNAPSHOT";
     const blockStartedAt = performance.now();
     const blockTag = await rpc.getBlockNumber();
     const blockNumber = parseHexQuantity(blockTag).toString(10);
     const blockSnapshotMs = elapsed(blockStartedAt);
+    snapshotEstablished = true;
+    establishedSnapshot = { rpcChainId, blockTag, blockNumber };
+    stage = "UNIVERSE_DISCOVERY";
     const universeStartedAt = performance.now();
-    const universeResponse = await withTimeout(listBscRwaTokens(BSC_CHAIN_ID));
+    let universeHttpAttempts = 0;
+    const universeResponse = await listBscRwaTokens(BSC_CHAIN_ID, {
+      signal: requestControl.signal,
+      timeoutMs: UPSTREAM_TIMEOUT_MS,
+      onAttempt: () => {
+        universeHttpAttempts += 1;
+      },
+    });
     const universeDiscoveryMs = elapsed(universeStartedAt);
     if (universeResponse.code !== 0 || !Array.isArray(universeResponse.data)) {
       return unavailable({
@@ -214,12 +268,41 @@ export async function GET(request: NextRequest) {
       universeResponse.data,
       BSC_CHAIN_ID,
     );
+    if (universe.status === "UNAVAILABLE") {
+      return unavailable({
+        generatedAt,
+        address,
+        error: "RWA_UNIVERSE_EMPTY",
+        rpcMethods: ["eth_chainId", "eth_blockNumber"],
+        extra: {
+          snapshot: {
+            rpcChainId,
+            blockTag,
+            blockNumber,
+            blockTimestamp: null,
+            blockTimestampStatus: "UNAVAILABLE",
+          },
+          universe: {
+            source: "BINANCE_WEB3_RWA",
+            status: universe.status,
+            reason: universe.reason,
+            receivedCount: universe.receivedCount,
+            chainCandidateCount: universe.chainCandidateCount,
+            validatedWrapperCount: 0,
+            rejectedCount: universe.rejected.length,
+            rejected: universe.rejected,
+          },
+        },
+      });
+    }
+    stage = "BALANCE_SNAPSHOT";
     const balancesStartedAt = performance.now();
     const inspection = await inspectPortfolioSnapshotWithMulticall({
       address,
       blockTag,
       wrappers: universe.entries.map((entry) => entry.wrapper),
       rpcUrl: process.env.UNDERLY_RPC_URL ?? "",
+      signal: requestControl.signal,
     });
     const balanceRpcMs = elapsed(balancesStartedAt);
     const entryByContract = new Map(
@@ -240,12 +323,14 @@ export async function GET(request: NextRequest) {
       return entry ? [entry] : [];
     });
     const providerObservations: PortfolioProviderObservation[] = [];
+    stage = "METADATA_ENRICHMENT";
     const enrichmentStartedAt = performance.now();
     const metadata = await enrichPortfolioMetadata({
       entries: positiveEntries,
       concurrency: METADATA_ENTRY_CONCURRENCY,
       timeoutMs: UPSTREAM_TIMEOUT_MS,
       observe: (observation) => providerObservations.push(observation),
+      signal: requestControl.signal,
     });
     const metadataEnrichmentMs = elapsed(enrichmentStartedAt);
     const balances: PortfolioBalanceInput[] = inspection.checks.map((check) => ({
@@ -257,22 +342,27 @@ export async function GET(request: NextRequest) {
       balanceBaseUnits: check.balanceBaseUnits,
       error: check.status === "ERROR" ? "RPC_BALANCE_READ_FAILED" : null,
     }));
+    stage = "CALCULATION";
     const calculationStartedAt = performance.now();
     const portfolio = buildUnifiedPortfolio({
       chainId: BSC_CHAIN_ID,
       balances,
       assets: metadata,
     });
-    const portfolioCalculationMs = elapsed(calculationStartedAt);
+    const deadlineExceeded = requestControl.deadlineExceeded();
     const status =
-      universe.rejected.length === 0 || portfolio.status !== "AVAILABLE"
-        ? portfolio.status
-        : universe.entries.length === 0
-          ? "UNAVAILABLE"
-          : "PARTIAL";
+      portfolio.status === "AVAILABLE" &&
+      (universe.status === "PARTIAL" || deadlineExceeded)
+        ? "PARTIAL"
+        : portfolio.status;
+    const exposures = buildPortfolioExposureIntelligence({
+      ...portfolio,
+      status,
+    });
+    const portfolioCalculationMs = elapsed(calculationStartedAt);
 
     const payload = {
-        version: "0.7-A",
+        version: "0.8-A",
         generatedAt,
         address,
         chainId: BSC_CHAIN_ID,
@@ -289,7 +379,10 @@ export async function GET(request: NextRequest) {
         },
         universe: {
           source: "BINANCE_WEB3_RWA",
+          status: universe.status,
+          reason: universe.reason,
           receivedCount: universeResponse.data.length,
+          chainCandidateCount: universe.chainCandidateCount,
           validatedWrapperCount: universe.entries.length,
           rejectedCount: universe.rejected.length,
           rejected: universe.rejected,
@@ -297,6 +390,7 @@ export async function GET(request: NextRequest) {
         summary: portfolio.summary,
         positions: portfolio.positions,
         underlyingExposures: portfolio.underlyingExposures,
+        exposures,
         balanceChecks: portfolio.balanceChecks,
         sources: {
           wrapperUniverse: "BINANCE_WEB3_RWA",
@@ -312,9 +406,11 @@ export async function GET(request: NextRequest) {
           balances:
             "A verified BSC Multicall3 aggregate3 read uses allowFailure=true at the same explicit block tag. Each inner result retains per-contract success or RPC_ERROR evidence; failures are never converted to zero.",
           enrichment:
-            "Price, profile, market session, equivalence, ActionGuard, and integrity evidence are requested only for wrappers with a proven positive balance. Prices use the provider's documented batch contract, profile metadata has an explicit short TTL cache, and all other calls preserve bounded concurrency and explicit timeout/error states.",
+            "Price, profile, market session, equivalence, ActionGuard, and integrity evidence are requested only for wrappers with a proven positive balance. Prices use the provider's documented batch contract, profile metadata has an explicit short TTL cache, and all provider calls preserve bounded concurrency, cancellable retries, and explicit timeout/error states. A request deadline after the balance snapshot degrades missing enrichment to PARTIAL rather than fabricating evidence.",
           valuation:
             "Portfolio values are indicative current-snapshot estimates, not executable prices or guarantees. No historical P&L, cost basis, investment return, or dividend entitlement is inferred.",
+          exposures:
+            "Underlying, exact wrapper, and source provider exposure breakdowns are deterministic derivations of this current portfolio snapshot. Weights use only known indicative values as their explicit denominator; positions without valuation evidence are excluded and remain visible in coverage counts.",
         },
         performance: {
           unit: "milliseconds",
@@ -336,7 +432,10 @@ export async function GET(request: NextRequest) {
               balanceOfInnerCalls: universe.entries.length,
             },
             provider: {
-              universe: 1,
+              universe: {
+                calls: 1,
+                httpAttempts: universeHttpAttempts,
+              },
               price: providerMetrics(providerObservations, "price"),
               profile: providerMetrics(providerObservations, "profile"),
               market: providerMetrics(providerObservations, "market"),
@@ -356,6 +455,10 @@ export async function GET(request: NextRequest) {
             priceCache: "DISABLED",
             marketCache: "DISABLED",
             upstreamTimeoutMs: UPSTREAM_TIMEOUT_MS,
+            rpcRequestTimeoutMs: RPC_REQUEST_TIMEOUT_MS,
+            functionMaxDurationSeconds: maxDuration,
+            requestDeadlineMs: PORTFOLIO_REQUEST_DEADLINE_MS,
+            deadlineExceeded,
           },
         },
         readOnly: readOnlyBoundary([
@@ -386,19 +489,55 @@ export async function GET(request: NextRequest) {
     );
     return response;
   } catch (error) {
+    const deadlineExceeded = requestControl.deadlineExceeded();
+    const clientCancelled = request.signal.aborted && !deadlineExceeded;
+    const timedOut =
+      (error instanceof WalletRpcError && error.message.includes("timed out")) ||
+      (error instanceof BinanceRequestAbortedError &&
+        error.reason === "TIMEOUT");
+    const failureCode = clientCancelled
+      ? "PORTFOLIO_REQUEST_CANCELLED"
+      : !snapshotEstablished && (deadlineExceeded || timedOut)
+        ? stage === "CHAIN_VERIFICATION"
+          ? "RPC_CHAIN_VERIFICATION_TIMEOUT"
+          : stage === "BLOCK_SNAPSHOT"
+            ? "RPC_BLOCK_SNAPSHOT_TIMEOUT"
+            : "PORTFOLIO_DEADLINE_BEFORE_SNAPSHOT"
+        : stage === "UNIVERSE_DISCOVERY" && (deadlineExceeded || timedOut)
+          ? "RWA_UNIVERSE_TIMEOUT"
+          : deadlineExceeded
+            ? "PORTFOLIO_DEADLINE_EXCEEDED"
+            : "PORTFOLIO_READ_FAILED";
     return unavailable({
       generatedAt,
       address,
-      error:
-        error instanceof Error && error.message === "UPSTREAM_TIMEOUT"
-          ? "RWA_UNIVERSE_TIMEOUT"
-          : "PORTFOLIO_READ_FAILED",
+      error: failureCode,
+      statusCode: clientCancelled ? 499 : 502,
       rpcMethods: [
         "eth_chainId",
         "eth_blockNumber",
         "eth_getCode",
         "eth_call",
       ],
+      extra: {
+        failureStage: stage,
+        ...(establishedSnapshot
+          ? {
+              snapshot: {
+                ...establishedSnapshot,
+                blockTimestamp: null,
+                blockTimestampStatus: "UNAVAILABLE",
+              },
+            }
+          : {}),
+        deadline: {
+          maxDurationSeconds: maxDuration,
+          budgetMs: PORTFOLIO_REQUEST_DEADLINE_MS,
+          exceeded: deadlineExceeded,
+        },
+      },
     });
+  } finally {
+    requestControl.dispose();
   }
 }

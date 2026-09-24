@@ -9,6 +9,42 @@ import type {
 } from "@/lib/ui/response-types";
 import { providerLabel } from "@/lib/ui/format";
 
+function uniqueSearchItems(items: SearchItem[]): SearchItem[] {
+  const byTicker = new Map<string, SearchItem>();
+
+  for (const item of items) {
+    const ticker = item.ticker.trim().toUpperCase();
+    if (!ticker) continue;
+
+    const current = byTicker.get(ticker);
+    if (!current) {
+      byTicker.set(ticker, {
+        ...item,
+        ticker,
+        wrappers: [...item.wrappers],
+      });
+      continue;
+    }
+
+    const wrapperIds = new Set(
+      current.wrappers.map(
+        (wrapper) =>
+          `${wrapper.chainId}:${wrapper.contractAddress.toLowerCase()}`,
+      ),
+    );
+    for (const wrapper of item.wrappers) {
+      const identity =
+        `${wrapper.chainId}:${wrapper.contractAddress.toLowerCase()}`;
+      if (!wrapperIds.has(identity)) {
+        wrapperIds.add(identity);
+        current.wrappers.push(wrapper);
+      }
+    }
+  }
+
+  return [...byTicker.values()];
+}
+
 export function TickerSearch({
   compact = false,
   initialValue = "",
@@ -24,10 +60,7 @@ export function TickerSearch({
 
   useEffect(() => {
     const q = query.trim();
-    if (!q) {
-      setItems([]);
-      return;
-    }
+    if (!q) return;
 
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
@@ -42,7 +75,7 @@ export function TickerSearch({
           return;
         }
         const payload = (await response.json()) as SearchResponse;
-        setItems(payload.data ?? []);
+        setItems(uniqueSearchItems(payload.data ?? []));
       } catch {
         if (!controller.signal.aborted) setItems([]);
       } finally {
@@ -77,7 +110,11 @@ export function TickerSearch({
           placeholder={compact ? "Search ticker…" : "Search NVDA, TSLA, AAPL…"}
           onFocus={() => setFocused(true)}
           onBlur={() => window.setTimeout(() => setFocused(false), 120)}
-          onChange={(event: ChangeEvent<HTMLInputElement>) => setQuery(event.target.value.toUpperCase())}
+          onChange={(event: ChangeEvent<HTMLInputElement>) => {
+            setQuery(event.target.value.toUpperCase());
+            setItems([]);
+            setLoading(false);
+          }}
           onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
             if (event.key === "Enter") openTicker();
           }}

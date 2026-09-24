@@ -365,13 +365,21 @@ describe("Underly v0.6-C execution readiness UI behavior", () => {
     expect(terminal).toContain(
       'import { ExecutionReadinessPanel } from "./ExecutionReadinessPanel";',
     );
-    expect(terminal).toContain("<StockIntelligencePanels ticker={ticker} />");
-    expect(terminal).toContain("<ContinuityPanel ticker={ticker} />");
-    expect(terminal).toContain("<PreflightPanel ticker={ticker} />");
     expect(terminal).toContain(
-      "<ExecutionReadinessPanel key={ticker} ticker={ticker} />",
+      '<StockIntelligencePanels key={`intelligence:${ticker}`} ticker={ticker} />',
     );
+    expect(terminal).toContain(
+      "<ContinuityPanel ticker={ticker} discovery={wrapperDiscovery} />",
+    );
+    expect(terminal).toContain(
+      '<PreflightPanel key={`preflight:${ticker}`} ticker={ticker} />',
+    );
+    expect(terminal).toContain(
+      "<ExecutionReadinessPanel",
+    );
+    expect(terminal).toContain("discovery={wrapperDiscovery}");
     expect(panel).toContain('fetch("/api/execution-readiness"');
+    expect(panel).not.toContain("/api/asset-graph?ticker=");
     expect(panel).not.toContain("signTransaction");
     expect(panel).not.toContain("sendTransaction");
     expect(panel).not.toContain("eth_sendRawTransaction");

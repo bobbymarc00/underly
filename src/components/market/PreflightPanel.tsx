@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 
 import {
   formatNumber,
@@ -115,27 +115,58 @@ export function PreflightPanel({ ticker }: { ticker: string }) {
   const [result, setResult] = useState<PreflightResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const requestControllerRef = useRef<AbortController | null>(null);
+  const requestSequenceRef = useRef(0);
+
+  function invalidateRequest() {
+    requestSequenceRef.current += 1;
+    requestControllerRef.current?.abort();
+    requestControllerRef.current = null;
+    setLoading(false);
+    setResult(null);
+    setError(null);
+  }
+
+  useEffect(
+    () => () => {
+      requestSequenceRef.current += 1;
+      requestControllerRef.current?.abort();
+    },
+    [],
+  );
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    requestControllerRef.current?.abort();
+    const controller = new AbortController();
+    requestControllerRef.current = controller;
+    const requestSequence = requestSequenceRef.current + 1;
+    requestSequenceRef.current = requestSequence;
+    const requestedTicker = ticker;
+    const requestedAmountUsd = amountUsd;
+    const requestedWalletAddress = walletAddress.trim();
+    const requestedMaxReferenceGapPct = maxReferenceGapPct.trim();
+
     setLoading(true);
     setError(null);
+    setResult(null);
 
     try {
       const response = await fetch("/api/preflight", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ticker,
-          amountUsd,
+          ticker: requestedTicker,
+          amountUsd: requestedAmountUsd,
           slippagePercent: "0.5",
-          ...(walletAddress.trim()
-            ? { walletAddress: walletAddress.trim() }
+          ...(requestedWalletAddress
+            ? { walletAddress: requestedWalletAddress }
             : {}),
-          ...(maxReferenceGapPct.trim()
-            ? { maxReferenceGapPct: maxReferenceGapPct.trim() }
+          ...(requestedMaxReferenceGapPct
+            ? { maxReferenceGapPct: requestedMaxReferenceGapPct }
             : {}),
         }),
+        signal: controller.signal,
       });
 
       const body = (await response.json()) as PreflightResponse;
@@ -143,19 +174,40 @@ export function PreflightPanel({ ticker }: { ticker: string }) {
         throw new Error(body.error ?? `HTTP ${response.status}`);
       }
 
+      if (
+        controller.signal.aborted ||
+        requestSequenceRef.current !== requestSequence
+      ) {
+        return;
+      }
+
+      if (body.request.ticker.toUpperCase() !== requestedTicker.toUpperCase()) {
+        throw new Error("Preflight response context mismatch");
+      }
+
       setResult(body);
     } catch (caught) {
+      if (
+        controller.signal.aborted ||
+        requestSequenceRef.current !== requestSequence
+      ) {
+        return;
+      }
+
       setResult(null);
       setError(
         caught instanceof Error ? caught.message : "Preflight failed",
       );
     } finally {
-      setLoading(false);
+      if (requestSequenceRef.current === requestSequence) {
+        requestControllerRef.current = null;
+        setLoading(false);
+      }
     }
   }
 
   return (
-    <section className="tm-shell tm-preflight">
+    <section id="preflight" className="tm-shell tm-preflight">
       <div className="tm-preflight-head">
         <div>
           <span className="tm-eyebrow">UNDERLY PREFLIGHT · BSC</span>
@@ -173,7 +225,10 @@ export function PreflightPanel({ ticker }: { ticker: string }) {
             <input
               inputMode="decimal"
               value={amountUsd}
-              onChange={(event) => setAmountUsd(event.target.value)}
+              onChange={(event) => {
+                setAmountUsd(event.target.value);
+                invalidateRequest();
+              }}
               aria-label="Preflight USD exposure"
             />
           </label>
@@ -182,7 +237,10 @@ export function PreflightPanel({ ticker }: { ticker: string }) {
             <span>PUBLIC WALLET · OPTIONAL</span>
             <input
               value={walletAddress}
-              onChange={(event) => setWalletAddress(event.target.value)}
+              onChange={(event) => {
+                setWalletAddress(event.target.value);
+                invalidateRequest();
+              }}
               placeholder="0x… for unsigned simulation"
               aria-label="Preflight public wallet address"
             />
@@ -193,9 +251,10 @@ export function PreflightPanel({ ticker }: { ticker: string }) {
             <input
               inputMode="decimal"
               value={maxReferenceGapPct}
-              onChange={(event) =>
-                setMaxReferenceGapPct(event.target.value)
-              }
+              onChange={(event) => {
+                setMaxReferenceGapPct(event.target.value);
+                invalidateRequest();
+              }}
               placeholder="e.g. 1"
               aria-label="Maximum reference gap guard"
             />

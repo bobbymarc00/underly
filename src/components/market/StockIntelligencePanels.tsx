@@ -410,12 +410,6 @@ export function StockIntelligencePanels({ ticker }: { ticker: string }) {
   useEffect(() => {
     const controller = new AbortController();
 
-    setLiquidity(initialLoad());
-    setActions(initialLoad());
-    setHistory(initialLoad());
-    setProof(null);
-    setProofError(null);
-
     void readJson<LiquidityPayload>(
       `/api/liquidity?ticker=${encodeURIComponent(ticker)}&notionalUsd=1000`,
       { signal: controller.signal },
@@ -522,7 +516,7 @@ export function StockIntelligencePanels({ ticker }: { ticker: string }) {
   }
 
   return (
-    <section className="tm-shell tm-intel">
+    <section id="market-intelligence" className="tm-shell tm-intel">
       <div className="tm-section-head tm-section-head-tight">
         <div>
           <span>WRAPPER INTELLIGENCE</span>

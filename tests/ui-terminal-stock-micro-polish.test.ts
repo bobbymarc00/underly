@@ -19,7 +19,9 @@ describe("stock detail micro polish", () => {
   it("keeps chart-free and evidence-first stock structure", () => {
     const terminal = file("src/components/market/StockTerminal.tsx");
 
-    expect(terminal).toContain("<StockIntelligencePanels ticker={ticker} />");
+    expect(terminal).toContain(
+      '<StockIntelligencePanels key={`intelligence:${ticker}`} ticker={ticker} />',
+    );
     expect(terminal).not.toContain("WrapperChart");
     expect(terminal).not.toContain("/api/market-history");
   });

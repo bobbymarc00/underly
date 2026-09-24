@@ -288,7 +288,10 @@ export interface PortfolioPayload {
   };
   universe?: {
     source: string;
+    status?: "AVAILABLE" | "PARTIAL" | "UNAVAILABLE";
+    reason?: string | null;
     receivedCount: number;
+    chainCandidateCount?: number;
     validatedWrapperCount: number;
     rejectedCount: number;
     rejected: Array<{
@@ -310,6 +313,7 @@ export interface PortfolioPayload {
   };
   positions: PortfolioPosition[];
   underlyingExposures: PortfolioUnderlyingExposure[];
+  exposures?: PortfolioExposureIntelligence;
   balanceChecks: Array<{
     chainId: string;
     contractAddress: string;
@@ -381,3 +385,4 @@ export interface PortfolioPayload {
     simulationRequested: boolean;
   };
 }
+import type { PortfolioExposureIntelligence } from "@/lib/underly/portfolio-intelligence";

@@ -444,21 +444,25 @@ export function buildUnifiedPortfolio(params: {
       ),
   );
   const status: UnifiedPortfolioResult["status"] =
-    params.balances.length > 0 && failedBalanceCount === params.balances.length
+    params.balances.length === 0
       ? "UNAVAILABLE"
-      : failedBalanceCount > 0 || metadataFailureCount > 0 || evidencePartial
-        ? "PARTIAL"
-        : "AVAILABLE";
-  const valuationStatus: UnifiedPortfolioResult["summary"]["valuationStatus"] =
-    positions.length === 0
-      ? failedBalanceCount || metadataFailureCount
+      : failedBalanceCount === params.balances.length
         ? "UNAVAILABLE"
-        : "AVAILABLE"
-      : valuesComplete
-        ? "AVAILABLE"
-        : knownValues.gt(0)
+        : failedBalanceCount > 0 || metadataFailureCount > 0 || evidencePartial
           ? "PARTIAL"
-          : "UNAVAILABLE";
+          : "AVAILABLE";
+  const valuationStatus: UnifiedPortfolioResult["summary"]["valuationStatus"] =
+    params.balances.length === 0
+      ? "UNAVAILABLE"
+      : positions.length === 0
+        ? failedBalanceCount || metadataFailureCount
+          ? "UNAVAILABLE"
+          : "AVAILABLE"
+        : valuesComplete
+          ? "AVAILABLE"
+          : knownValues.gt(0)
+            ? "PARTIAL"
+            : "UNAVAILABLE";
 
   return {
     status,

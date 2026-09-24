@@ -3,6 +3,9 @@ import { resolve } from "node:path";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { BinanceRequestAbortedError } from "@/lib/binance/client";
+import { WalletRpcError } from "@/lib/wallet/evm-rpc";
+
 const {
   listBscRwaTokensMock,
   getRwaPricesMock,
@@ -145,7 +148,7 @@ function successfulMetadata(contract: string) {
   });
 }
 
-describe("GET /api/portfolio v0.7-A", () => {
+describe("GET /api/portfolio v0.8-A", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     clearPortfolioProfileCache();
@@ -203,6 +206,77 @@ describe("GET /api/portfolio v0.7-A", () => {
     expect(listBscRwaTokensMock).not.toHaveBeenCalled();
   });
 
+  it("fails closed before balance or metadata reads when the universe is empty", async () => {
+    listBscRwaTokensMock.mockResolvedValueOnce({
+      code: 0,
+      msg: "success",
+      data: [],
+    });
+
+    const response = await GET(request());
+    const payload = await response.json();
+
+    expect(response.status).toBe(502);
+    expect(payload).toMatchObject({
+      version: "0.8-A",
+      status: "UNAVAILABLE",
+      error: "RWA_UNIVERSE_EMPTY",
+      universe: {
+        status: "UNAVAILABLE",
+        reason: "NO_VALIDATED_WRAPPERS_FOR_CONFIGURED_CHAIN",
+        receivedCount: 0,
+        chainCandidateCount: 0,
+        validatedWrapperCount: 0,
+      },
+      exposures: {
+        status: "UNAVAILABLE",
+        denominator: { status: "UNAVAILABLE" },
+        byUnderlying: [],
+        byWrapper: [],
+        byProvider: [],
+      },
+    });
+    expect(inspectPortfolioSnapshotWithMulticallMock).not.toHaveBeenCalled();
+    expect(getErc20BalanceMock).not.toHaveBeenCalled();
+    expect(getRwaPricesMock).not.toHaveBeenCalled();
+    expect(getUnderlyingMarketMock).not.toHaveBeenCalled();
+    expect(getUnderlyingProfileMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps a validated all-zero wallet available without inventing exposure", async () => {
+    getErc20BalanceMock.mockResolvedValue({ rawHex: "0x0", baseUnits: "0" });
+
+    const response = await GET(request());
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload).toMatchObject({
+      status: "AVAILABLE",
+      summary: {
+        checkedWrapperCount: 2,
+        provenZeroBalanceCount: 2,
+        positiveBalanceCount: 0,
+      },
+      exposures: {
+        status: "AVAILABLE",
+        denominator: {
+          knownIndicativeValueUsd: "0",
+          status: "UNAVAILABLE",
+        },
+        byUnderlying: [],
+        byWrapper: [],
+        byProvider: [],
+      },
+    });
+    expect(payload.balanceChecks).toEqual([
+      expect.objectContaining({ status: "ZERO" }),
+      expect.objectContaining({ status: "ZERO" }),
+    ]);
+    expect(getRwaPricesMock).not.toHaveBeenCalled();
+    expect(getUnderlyingMarketMock).not.toHaveBeenCalled();
+    expect(getUnderlyingProfileMock).not.toHaveBeenCalled();
+  });
+
   it("uses one explicit block for every balance and enriches only positive wrappers", async () => {
     getErc20BalanceMock.mockImplementation(async (contract: string) =>
       contract === WRAPPER_A
@@ -234,6 +308,24 @@ describe("GET /api/portfolio v0.7-A", () => {
       equivalence: { underlyingEquivalentShares: "0.75" },
       valuation: { indicativeValueUsd: "15" },
     });
+    expect(payload.exposures).toMatchObject({
+      status: "AVAILABLE",
+      denominator: {
+        knownIndicativeValueUsd: "15",
+        knownValuePositionCount: 1,
+        unknownValuePositionCount: 0,
+        status: "AVAILABLE",
+      },
+      coverage: {
+        inputPositionCount: 1,
+        uniquePositionCount: 1,
+        valuationCoveragePct: "100",
+      },
+      reconciliation: { status: "MATCH" },
+    });
+    expect(payload.exposures.byUnderlying).toHaveLength(1);
+    expect(payload.exposures.byWrapper).toHaveLength(1);
+    expect(payload.exposures.byProvider).toHaveLength(1);
     expect(payload.balanceChecks).toEqual([
       expect.objectContaining({ contractAddress: WRAPPER_B, status: "ZERO" }),
       expect.objectContaining({ contractAddress: WRAPPER_A, status: "POSITIVE" }),
@@ -244,7 +336,14 @@ describe("GET /api/portfolio v0.7-A", () => {
       expect(call[2]).toBe("0xabc");
     }
     expect(getRwaPricesMock).toHaveBeenCalledTimes(1);
-    expect(getRwaPricesMock).toHaveBeenCalledWith("56", [WRAPPER_A]);
+    expect(getRwaPricesMock).toHaveBeenCalledWith(
+      "56",
+      [WRAPPER_A],
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+        timeoutMs: 10_000,
+      }),
+    );
     expect(payload.readOnly).toMatchObject({
       rpcMethods: [
         "eth_chainId",
@@ -325,6 +424,10 @@ describe("GET /api/portfolio v0.7-A", () => {
     expect(getRwaPricesMock).toHaveBeenCalledWith(
       "56",
       expect.arrayContaining([WRAPPER_A, WRAPPER_B]),
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+        timeoutMs: 10_000,
+      }),
     );
     expect(payload.performance.calls.provider.price).toMatchObject({
       calls: 1,
@@ -622,6 +725,91 @@ describe("GET /api/portfolio v0.7-A", () => {
     expect(getErc20BalanceMock).not.toHaveBeenCalled();
   });
 
+  it("returns an explicit block-snapshot timeout before a valid snapshot exists", async () => {
+    getBlockNumberMock.mockRejectedValueOnce(
+      new WalletRpcError("RPC request timed out"),
+    );
+
+    const response = await GET(request());
+    const payload = await response.json();
+
+    expect(response.status).toBe(502);
+    expect(payload).toMatchObject({
+      status: "UNAVAILABLE",
+      error: "RPC_BLOCK_SNAPSHOT_TIMEOUT",
+      failureStage: "BLOCK_SNAPSHOT",
+      deadline: {
+        maxDurationSeconds: 60,
+        budgetMs: 50_000,
+        exceeded: false,
+      },
+    });
+    expect(payload.snapshot).toBeUndefined();
+    expect(inspectPortfolioSnapshotWithMulticallMock).not.toHaveBeenCalled();
+  });
+
+  it("retains the established block when universe discovery times out", async () => {
+    listBscRwaTokensMock.mockRejectedValueOnce(
+      new BinanceRequestAbortedError("TIMEOUT"),
+    );
+
+    const response = await GET(request());
+    const payload = await response.json();
+
+    expect(response.status).toBe(502);
+    expect(payload).toMatchObject({
+      status: "UNAVAILABLE",
+      error: "RWA_UNIVERSE_TIMEOUT",
+      failureStage: "UNIVERSE_DISCOVERY",
+      snapshot: {
+        rpcChainId: "56",
+        blockTag: "0xabc",
+        blockNumber: "2748",
+      },
+    });
+    expect(inspectPortfolioSnapshotWithMulticallMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps aborted enrichment partial when source-backed fallback evidence exists", async () => {
+    getErc20BalanceMock.mockImplementation(async (contract: string) =>
+      contract === WRAPPER_A
+        ? { rawHex: "0xf4240", baseUnits: "1000000" }
+        : { rawHex: "0x0", baseUnits: "0" },
+    );
+    getRwaPricesMock.mockRejectedValueOnce(
+      new BinanceRequestAbortedError("ABORTED"),
+    );
+    getUnderlyingMarketMock.mockRejectedValueOnce(
+      new BinanceRequestAbortedError("ABORTED"),
+    );
+    getUnderlyingProfileMock.mockRejectedValueOnce(
+      new BinanceRequestAbortedError("ABORTED"),
+    );
+
+    const response = await GET(request());
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.status).toBe("PARTIAL");
+    expect(payload.positions[0]).toMatchObject({
+      balance: { quantity: "1" },
+      valuation: { tokenPriceUsd: "10", indicativeValueUsd: "10" },
+      evidence: {
+        sources: {
+          price: { status: "ERROR", reason: "UPSTREAM_ABORTED" },
+          market: { status: "ERROR", reason: "UPSTREAM_ABORTED" },
+          profile: { status: "ERROR", reason: "UPSTREAM_ABORTED" },
+        },
+      },
+    });
+    expect(payload.balanceChecks).toContainEqual(
+      expect.objectContaining({
+        contractAddress: WRAPPER_A,
+        status: "POSITIVE",
+      }),
+    );
+  });
+
   it("does not report AVAILABLE when a BSC universe row is rejected", async () => {
     listBscRwaTokensMock.mockResolvedValueOnce({
       code: 0,
@@ -646,9 +834,12 @@ describe("GET /api/portfolio v0.7-A", () => {
     expect(response.status).toBe(200);
     expect(payload.status).toBe("PARTIAL");
     expect(payload.universe).toMatchObject({
+      status: "PARTIAL",
+      reason: "UNIVERSE_ROWS_REJECTED",
       validatedWrapperCount: 2,
       rejectedCount: 1,
     });
+    expect(payload.exposures.status).toBe("PARTIAL");
     expect(payload.universe.rejected).toContainEqual({
       contractAddress: "not-an-address",
       reason: "INVALID_CONTRACT_ADDRESS",
@@ -664,7 +855,11 @@ describe("GET /api/portfolio v0.7-A", () => {
       resolve(process.cwd(), "src/lib/portfolio/source.ts"),
       "utf8",
     );
-    const joined = `${route}\n${source}`;
+    const intelligence = readFileSync(
+      resolve(process.cwd(), "src/lib/underly/portfolio-intelligence.ts"),
+      "utf8",
+    );
+    const joined = `${route}\n${source}\n${intelligence}`;
 
     expect(joined).not.toMatch(/from\s+["'][^"']*(trading|preflight|execution)[^"']*["']/i);
     expect(joined).not.toMatch(/eth_sendTransaction|eth_sendRawTransaction|personal_sign|eth_signTypedData/i);

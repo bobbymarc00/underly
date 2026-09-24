@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { providerLabel } from "@/lib/ui/format";
@@ -8,6 +9,7 @@ import type {
   CompanyPayload,
   ResolvedField,
 } from "@/lib/ui/market-types";
+import type { AssetGraphDeployment } from "@/lib/underly/asset-graph";
 
 import { ContinuityPanel } from "./ContinuityPanel";
 import type { ContinuityContext } from "./ContinuityPanel";
@@ -15,6 +17,8 @@ import { ExecutionReadinessPanel } from "./ExecutionReadinessPanel";
 import { PreflightPanel } from "./PreflightPanel";
 import { StockIntelligencePanels } from "./StockIntelligencePanels";
 import { TerminalHeader } from "./TerminalHeader";
+
+const EMPTY_ASSET_GRAPH_DEPLOYMENTS: AssetGraphDeployment[] = [];
 
 function field(
   source: Record<string, ResolvedField> | undefined,
@@ -118,6 +122,11 @@ export function StockTerminal({
 }) {
   const [company, setCompany] = useState<CompanyPayload | null>(null);
   const [companyError, setCompanyError] = useState<string | null>(null);
+  const [assetGraph, setAssetGraph] = useState<{
+    ticker: string;
+    deployments: AssetGraphDeployment[];
+    error: string | null;
+  } | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -148,6 +157,57 @@ export function StockTerminal({
 
     return () => controller.abort();
   }, [ticker]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetch(`/api/asset-graph?ticker=${encodeURIComponent(ticker)}`, {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        const body = (await response.json()) as {
+          underlyings?: Array<{
+            ticker: string;
+            deployments: AssetGraphDeployment[];
+          }>;
+          error?: string;
+        };
+        if (!response.ok) {
+          throw new Error(body.error ?? `HTTP ${response.status}`);
+        }
+        return body;
+      })
+      .then((body) => {
+        if (controller.signal.aborted) return;
+        setAssetGraph({
+          ticker,
+          deployments: body.underlyings?.[0]?.deployments ?? [],
+          error: null,
+        });
+      })
+      .catch((caught) => {
+        if (controller.signal.aborted) return;
+        setAssetGraph({
+          ticker,
+          deployments: [],
+          error:
+            caught instanceof Error
+              ? caught.message
+              : "Wrapper discovery failed",
+        });
+      });
+
+    return () => controller.abort();
+  }, [ticker]);
+
+  const currentAssetGraph = assetGraph?.ticker === ticker ? assetGraph : null;
+  const wrapperDiscovery = {
+    deployments:
+      currentAssetGraph?.deployments ?? EMPTY_ASSET_GRAPH_DEPLOYMENTS,
+    error: currentAssetGraph?.error ?? null,
+    loading: currentAssetGraph === null,
+  };
 
   const fundamentals = company?.fundamentals.fields;
   const profile = company?.company.fields;
@@ -205,6 +265,16 @@ export function StockTerminal({
         </div>
       </section>
 
+      <nav className="tm-shell tm-product-path" aria-label="Stock workflow">
+        <Link href="/#dislocations">DISCOVER / DISLOCATIONS</Link>
+        <a href="#asset-graph">ASSET GRAPH</a>
+        <a href="#market-intelligence">LIQUIDITY / ACTIONS</a>
+        <Link href="/wallet">PORTFOLIO / EXPOSURE</Link>
+        <a href="#continuity">CONTINUITY</a>
+        <a href="#preflight">PREFLIGHT</a>
+        <a href="#readiness">READINESS</a>
+      </nav>
+
       {companyError && (
         <section className="tm-shell">
           <div className="tm-callout tm-callout-error">
@@ -218,10 +288,10 @@ export function StockTerminal({
         </section>
       )}
 
-      <section className="tm-shell tm-wrapper-strip">
+      <section id="asset-graph" className="tm-shell tm-wrapper-strip">
         <div className="tm-section-head tm-section-head-tight">
           <div>
-            <span>WRAPPERS</span>
+            <span>ASSET GRAPH · VERIFIED REPRESENTATIONS</span>
             <h2>Same underlying, separate evidence</h2>
           </div>
         </div>
@@ -385,17 +455,25 @@ export function StockTerminal({
         </article>
       </section>
 
-      <StockIntelligencePanels ticker={ticker} />
+      <StockIntelligencePanels key={`intelligence:${ticker}`} ticker={ticker} />
 
       {continuityContext ? (
-        <ContinuityPanel ticker={ticker} initialContext={continuityContext} />
+        <ContinuityPanel
+          ticker={ticker}
+          initialContext={continuityContext}
+          discovery={wrapperDiscovery}
+        />
       ) : (
-        <ContinuityPanel ticker={ticker} />
+        <ContinuityPanel ticker={ticker} discovery={wrapperDiscovery} />
       )}
 
-      <PreflightPanel ticker={ticker} />
+      <PreflightPanel key={`preflight:${ticker}`} ticker={ticker} />
 
-      <ExecutionReadinessPanel key={ticker} ticker={ticker} />
+      <ExecutionReadinessPanel
+        key={ticker}
+        ticker={ticker}
+        discovery={wrapperDiscovery}
+      />
 
       <section className="tm-shell tm-stock-next">
         <div>

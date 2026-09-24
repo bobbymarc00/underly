@@ -87,7 +87,7 @@ export function DislocationRadar() {
   }, []);
 
   return (
-    <section className="tm-shell tm-dislocation-radar">
+    <section id="dislocations" className="tm-shell tm-dislocation-radar">
       <div className="tm-section-head tm-section-head-tight">
         <div>
           <span>UNDERLY v0.3 · ECONOMIC NORMALIZATION</span>

@@ -34,14 +34,6 @@ type Deployment = {
   chainId: string;
 };
 
-type AssetGraphResponse = {
-  underlyings?: Array<{
-    ticker: string;
-    deployments: Deployment[];
-  }>;
-  error?: string;
-};
-
 type ErrorResponse = {
   error?: string;
   code?: string;
@@ -68,60 +60,36 @@ function evidenceValue(value: string | null | undefined): string {
   return value ? value.replaceAll("_", " ") : "UNKNOWN";
 }
 
-export function ExecutionReadinessPanel({ ticker }: { ticker: string }) {
+export function ExecutionReadinessPanel({
+  ticker,
+  discovery,
+}: {
+  ticker: string;
+  discovery: {
+    deployments: Deployment[];
+    error: string | null;
+    loading: boolean;
+  };
+}) {
   const [state, dispatch] = useReducer(
     executionReadinessUiReducer,
     undefined,
     initialExecutionReadinessUiState,
   );
-  const [deployments, setDeployments] = useState<Deployment[]>([]);
-  const [discoveryError, setDiscoveryError] = useState<string | null>(null);
-  const [discovering, setDiscovering] = useState(true);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const requestSequence = useRef(0);
   const requestController = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    const controller = new AbortController();
-    requestController.current?.abort();
-    requestSequence.current += 1;
-    queueMicrotask(() => {
-      if (controller.signal.aborted) return;
-      dispatch({ type: "tickerChanged" });
-      setDeployments([]);
-      setDiscoveryError(null);
-      setDiscovering(true);
-    });
+    return () => {
+      requestSequence.current += 1;
+      requestController.current?.abort();
+    };
+  }, []);
 
-    fetch(`/api/asset-graph?ticker=${encodeURIComponent(ticker)}`, {
-      cache: "no-store",
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        const body = (await response.json()) as AssetGraphResponse;
-        if (!response.ok) {
-          throw new Error(body.error ?? `HTTP ${response.status}`);
-        }
-        return body;
-      })
-      .then((body) => {
-        if (controller.signal.aborted) return;
-        setDeployments(body.underlyings?.[0]?.deployments ?? []);
-      })
-      .catch((caught) => {
-        if (controller.signal.aborted) return;
-        setDiscoveryError(
-          caught instanceof Error
-            ? caught.message
-            : "Wrapper discovery failed",
-        );
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setDiscovering(false);
-      });
-
-    return () => controller.abort();
-  }, [ticker]);
+  const deployments = discovery.deployments;
+  const discoveryError = discovery.error;
+  const discovering = discovery.loading;
 
   useEffect(() => {
     if (!resultMatchesTicker(state.result, ticker)) return;
@@ -248,7 +216,7 @@ export function ExecutionReadinessPanel({ ticker }: { ticker: string }) {
   }
 
   return (
-    <section className="tm-shell tm-readiness">
+    <section id="readiness" className="tm-shell tm-readiness">
       <div className="tm-readiness-head">
         <div>
           <span className="tm-eyebrow">EXECUTION READINESS · BSC</span>

@@ -16,8 +16,74 @@ export interface BinanceEnvelope<T> {
 
 export class BinanceTransportError extends Error {}
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+export class BinanceRequestAbortedError extends BinanceTransportError {
+  constructor(readonly reason: "TIMEOUT" | "ABORTED") {
+    super(
+      reason === "TIMEOUT"
+        ? "Binance request timed out"
+        : "Binance request was aborted",
+    );
+    this.name = "BinanceRequestAbortedError";
+  }
+}
+
+export interface BinanceRequestOptions {
+  signal?: AbortSignal;
+  timeoutMs?: number;
+  onAttempt?: () => void;
+}
+
+function requestControl(options: BinanceRequestOptions) {
+  const controller = new AbortController();
+  let timedOut = false;
+  const abortFromParent = () => controller.abort(options.signal?.reason);
+
+  if (options.signal?.aborted) {
+    abortFromParent();
+  } else {
+    options.signal?.addEventListener("abort", abortFromParent, { once: true });
+  }
+
+  const timeout =
+    options.timeoutMs === undefined
+      ? undefined
+      : setTimeout(() => {
+          timedOut = true;
+          controller.abort();
+        }, options.timeoutMs);
+
+  return {
+    signal: controller.signal,
+    abortedError: () =>
+      new BinanceRequestAbortedError(timedOut ? "TIMEOUT" : "ABORTED"),
+    dispose: () => {
+      if (timeout) clearTimeout(timeout);
+      options.signal?.removeEventListener("abort", abortFromParent);
+    },
+  };
+}
+
+function sleep(
+  ms: number,
+  signal: AbortSignal,
+  abortedError: () => BinanceRequestAbortedError,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal.aborted) {
+      reject(abortedError());
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      signal.removeEventListener("abort", abort);
+      resolve();
+    }, ms);
+    const abort = () => {
+      clearTimeout(timeout);
+      reject(abortedError());
+    };
+    signal.addEventListener("abort", abort, { once: true });
+  });
 }
 
 function retryDelayMs(response: Response, attempt: number): number {
@@ -38,88 +104,126 @@ function retryDelayMs(response: Response, attempt: number): number {
 export async function binanceSignedGet<T>(
   apiPath: string,
   query: Record<string, string | number | boolean | undefined> = {},
+  options: BinanceRequestOptions = {},
 ): Promise<BinanceEnvelope<T>> {
   const qs = encodeQuery(query);
   const pathWithQuery = `${apiPath}${qs ? `?${qs}` : ""}`;
   const signedPath = `${BUILD_PREFIX}${pathWithQuery}`;
+  const control = requestControl(options);
 
-  for (let attempt = 0; attempt <= MAX_RATE_LIMIT_RETRIES; attempt++) {
-    const timestamp = timestampIso();
-    const signature = signBinanceRequest({
-      timestamp,
-      method: "GET",
-      requestPath: signedPath,
-    });
+  try {
+    for (let attempt = 0; attempt <= MAX_RATE_LIMIT_RETRIES; attempt++) {
+      const timestamp = timestampIso();
+      const signature = signBinanceRequest({
+        timestamp,
+        method: "GET",
+        requestPath: signedPath,
+      });
 
-    const response = await fetch(`${ORIGIN}${signedPath}`, {
-      method: "GET",
-      headers: {
-        "X-OC-APIKEY": requiredEnv("BINANCE_WEB3_API_KEY"),
-        "X-OC-TIMESTAMP": timestamp,
-        "X-OC-SIGN": signature,
-        "X-OC-RECV-WINDOW": "60000",
-        Accept: "application/json",
-      },
-      cache: "no-store",
-    });
+      options.onAttempt?.();
+      let response: Response;
+      try {
+        response = await fetch(`${ORIGIN}${signedPath}`, {
+          method: "GET",
+          headers: {
+            "X-OC-APIKEY": requiredEnv("BINANCE_WEB3_API_KEY"),
+            "X-OC-TIMESTAMP": timestamp,
+            "X-OC-SIGN": signature,
+            "X-OC-RECV-WINDOW": "60000",
+            Accept: "application/json",
+          },
+          cache: "no-store",
+          signal: control.signal,
+        });
+      } catch (error) {
+        if (control.signal.aborted) throw control.abortedError();
+        throw error;
+      }
 
-    let payload: BinanceEnvelope<T>;
-    try {
-      payload = (await response.json()) as BinanceEnvelope<T>;
-    } catch {
-      throw new BinanceTransportError(`Binance returned non-JSON HTTP ${response.status}`);
+      let payload: BinanceEnvelope<T>;
+      try {
+        payload = (await response.json()) as BinanceEnvelope<T>;
+      } catch {
+        throw new BinanceTransportError(
+          `Binance returned non-JSON HTTP ${response.status}`,
+        );
+      }
+
+      if (payload.code !== 42900) return payload;
+      if (attempt === MAX_RATE_LIMIT_RETRIES) return payload;
+      await sleep(
+        retryDelayMs(response, attempt),
+        control.signal,
+        control.abortedError,
+      );
     }
 
-    if (payload.code !== 42900) return payload;
-    if (attempt === MAX_RATE_LIMIT_RETRIES) return payload;
-    await sleep(retryDelayMs(response, attempt));
+    throw new BinanceTransportError("Unexpected Binance retry state");
+  } finally {
+    control.dispose();
   }
-
-  throw new BinanceTransportError("Unexpected Binance retry state");
 }
 export async function binanceSignedPost<T>(
   apiPath: string,
   body: unknown,
+  options: BinanceRequestOptions = {},
 ): Promise<BinanceEnvelope<T>> {
   const signedPath = `${BUILD_PREFIX}${apiPath}`;
   const bodyText = JSON.stringify(body);
+  const control = requestControl(options);
 
-  for (let attempt = 0; attempt <= MAX_RATE_LIMIT_RETRIES; attempt++) {
-    const timestamp = timestampIso();
-    const signature = signBinanceRequest({
-      timestamp,
-      method: "POST",
-      requestPath: signedPath,
-      body: bodyText,
-    });
+  try {
+    for (let attempt = 0; attempt <= MAX_RATE_LIMIT_RETRIES; attempt++) {
+      const timestamp = timestampIso();
+      const signature = signBinanceRequest({
+        timestamp,
+        method: "POST",
+        requestPath: signedPath,
+        body: bodyText,
+      });
 
-    const response = await fetch(`${ORIGIN}${signedPath}`, {
-      method: "POST",
-      headers: {
-        "X-OC-APIKEY": requiredEnv("BINANCE_WEB3_API_KEY"),
-        "X-OC-TIMESTAMP": timestamp,
-        "X-OC-SIGN": signature,
-        "X-OC-RECV-WINDOW": "60000",
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: bodyText,
-      cache: "no-store",
-    });
+      options.onAttempt?.();
+      let response: Response;
+      try {
+        response = await fetch(`${ORIGIN}${signedPath}`, {
+          method: "POST",
+          headers: {
+            "X-OC-APIKEY": requiredEnv("BINANCE_WEB3_API_KEY"),
+            "X-OC-TIMESTAMP": timestamp,
+            "X-OC-SIGN": signature,
+            "X-OC-RECV-WINDOW": "60000",
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: bodyText,
+          cache: "no-store",
+          signal: control.signal,
+        });
+      } catch (error) {
+        if (control.signal.aborted) throw control.abortedError();
+        throw error;
+      }
 
-    let payload: BinanceEnvelope<T>;
-    try {
-      payload = (await response.json()) as BinanceEnvelope<T>;
-    } catch {
-      throw new BinanceTransportError(
-        `Binance returned non-JSON HTTP ${response.status}`,
+      let payload: BinanceEnvelope<T>;
+      try {
+        payload = (await response.json()) as BinanceEnvelope<T>;
+      } catch {
+        throw new BinanceTransportError(
+          `Binance returned non-JSON HTTP ${response.status}`,
+        );
+      }
+
+      if (payload.code !== 42900) return payload;
+      if (attempt === MAX_RATE_LIMIT_RETRIES) return payload;
+      await sleep(
+        retryDelayMs(response, attempt),
+        control.signal,
+        control.abortedError,
       );
     }
 
-    if (payload.code !== 42900) return payload;
-    if (attempt === MAX_RATE_LIMIT_RETRIES) return payload;
-    await sleep(retryDelayMs(response, attempt));
+    throw new BinanceTransportError("Unexpected Binance retry state");
+  } finally {
+    control.dispose();
   }
-
-  throw new BinanceTransportError("Unexpected Binance retry state");
 }

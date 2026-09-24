@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { FirewallResponse, FindingSeverity, WrapperResult } from "@/lib/ui/response-types";
 import {
   compactAddress,
@@ -338,18 +338,49 @@ function ProofDrawer({ result }: { result: FirewallResponse }) {
   );
 }
 
+interface ProviderFilterState {
+  activeProvider: string;
+  providerSignature: string;
+}
+
+export function reconcileProviderFilter(
+  state: ProviderFilterState,
+  providers: string[],
+): ProviderFilterState {
+  const providerSignature = providers.join("\u0000");
+  if (state.providerSignature === providerSignature) return state;
+
+  return {
+    activeProvider:
+      state.activeProvider === "ALL" || providers.includes(state.activeProvider)
+        ? state.activeProvider
+        : "ALL",
+    providerSignature,
+  };
+}
+
 export function ResultView({ result }: { result: FirewallResponse }) {
   const providers = useMemo(
     () => Array.from(new Set(result.wrappers.map((wrapper) => wrapper.identity.platform))),
     [result],
   );
-  const [activeProvider, setActiveProvider] = useState("ALL");
+  const providerSignature = providers.join("\u0000");
+  const [providerFilter, setProviderFilter] = useState<ProviderFilterState>({
+    activeProvider: "ALL",
+    providerSignature,
+  });
+  const reconciledFilter = reconcileProviderFilter(providerFilter, providers);
+  if (reconciledFilter !== providerFilter) {
+    setProviderFilter(reconciledFilter);
+  }
+  const activeProvider = reconciledFilter.activeProvider;
 
-  useEffect(() => {
-    if (activeProvider !== "ALL" && !providers.includes(activeProvider)) {
-      setActiveProvider("ALL");
-    }
-  }, [activeProvider, providers]);
+  function selectProvider(nextProvider: string) {
+    setProviderFilter({
+      activeProvider: nextProvider,
+      providerSignature,
+    });
+  }
 
   const visible = activeProvider === "ALL"
     ? result.wrappers
@@ -389,9 +420,9 @@ export function ResultView({ result }: { result: FirewallResponse }) {
 
       <div className="provider-filter">
         <span>Inspect cards</span>
-        <button type="button" data-active={activeProvider === "ALL"} onClick={() => setActiveProvider("ALL")}>All wrappers</button>
+        <button type="button" data-active={activeProvider === "ALL"} onClick={() => selectProvider("ALL")}>All wrappers</button>
         {providers.map((provider) => (
-          <button type="button" key={provider} data-active={activeProvider === provider} onClick={() => setActiveProvider(provider)}>
+          <button type="button" key={provider} data-active={activeProvider === provider} onClick={() => selectProvider(provider)}>
             {providerLabel(provider)}
           </button>
         ))}

@@ -59,6 +59,17 @@ function formatPublishedAt(value: string): string {
   }).format(date);
 }
 
+function uniqueTickerEvidence(items: TickerEvidence[]): TickerEvidence[] {
+  const seen = new Set<string>();
+
+  return items.filter((item) => {
+    const ticker = item.ticker.trim().toUpperCase();
+    if (!ticker || seen.has(ticker)) return false;
+    seen.add(ticker);
+    return true;
+  });
+}
+
 function unavailableCopy(
   ticker: string | null,
   reasonCode?: NewsReasonCode,
@@ -101,7 +112,8 @@ export function NewsDock() {
 
   const [payload, setPayload] =
     useState<NewsPayload | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [resolvedRequest, setResolvedRequest] = useState<string | null>(null);
+  const requestKey = visible ? ticker ?? "MARKET" : null;
 
   useEffect(() => {
     if (!visible) return;
@@ -110,8 +122,6 @@ export function NewsDock() {
     const endpoint = ticker
       ? `/api/news?scope=ticker&ticker=${encodeURIComponent(ticker)}&limit=10`
       : "/api/news?scope=market&limit=10";
-
-    setLoading(true);
 
     fetch(endpoint, {
       cache: "no-store",
@@ -124,7 +134,10 @@ export function NewsDock() {
         }
         return body;
       })
-      .then(setPayload)
+      .then((body) => {
+        setPayload(body);
+        setResolvedRequest(requestKey);
+      })
       .catch(() => {
         if (controller.signal.aborted) return;
 
@@ -136,23 +149,23 @@ export function NewsDock() {
           items: [],
           reasonCode: "PROVIDER_UNAVAILABLE",
         });
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
+        setResolvedRequest(requestKey);
       });
 
     return () => controller.abort();
-  }, [ticker, visible]);
+  }, [requestKey, ticker, visible]);
 
   if (!visible) return null;
 
   const title = ticker
     ? `${ticker} related news`
     : "Stock market news";
+  const loading = resolvedRequest !== requestKey;
+  const currentPayload = loading ? null : payload;
 
   const unavailable =
-    payload?.status === "UNAVAILABLE"
-      ? unavailableCopy(ticker, payload.reasonCode)
+    currentPayload?.status === "UNAVAILABLE"
+      ? unavailableCopy(ticker, currentPayload.reasonCode)
       : null;
 
   return (
@@ -173,7 +186,7 @@ export function NewsDock() {
 
       {loading && <div className={styles.state}>Loading news…</div>}
 
-      {!loading && payload?.status === "NOT_CONFIGURED" && (
+      {!loading && currentPayload?.status === "NOT_CONFIGURED" && (
         <div className={styles.state}>
           News is not configured for this deployment.
         </div>
@@ -187,18 +200,18 @@ export function NewsDock() {
       )}
 
       {!loading &&
-        payload?.status === "AVAILABLE" &&
-        payload.items.length === 0 && (
+        currentPayload?.status === "AVAILABLE" &&
+        currentPayload.items.length === 0 && (
           <div className={styles.state}>
             No matching articles in the current provider response.
           </div>
         )}
 
       {!loading &&
-        payload?.status === "AVAILABLE" &&
-        payload.items.length > 0 && (
+        currentPayload?.status === "AVAILABLE" &&
+        currentPayload.items.length > 0 && (
           <div className={styles.grid}>
-            {payload.items.map((item) => {
+            {currentPayload.items.map((item) => {
               const requestedEvidence = ticker
                 ? item.relatedTickers.find(
                     (evidence) => evidence.ticker === ticker,
@@ -234,7 +247,7 @@ export function NewsDock() {
                       </span>
                     ) : (
                       <div className={styles.tickers}>
-                        {item.relatedTickers
+                        {uniqueTickerEvidence(item.relatedTickers)
                           .slice(0, 4)
                           .map((evidence) => (
                             <Link

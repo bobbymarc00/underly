@@ -1,5 +1,9 @@
 import "server-only";
-import { binanceSignedGet, type BinanceEnvelope } from "./client";
+import {
+  binanceSignedGet,
+  type BinanceEnvelope,
+  type BinanceRequestOptions,
+} from "./client";
 
 export interface RwaAssetRef {
   platformId: string;
@@ -104,36 +108,52 @@ export function searchRwa(keyword: string): Promise<BinanceEnvelope<RwaSearchRow
   return binanceSignedGet<RwaSearchRow[]>("/api/v1/dex/market/rwa/search", { keyword });
 }
 
-export function listBscRwaTokens(chainId: string): Promise<BinanceEnvelope<RwaTokenListRow[]>> {
+export function listBscRwaTokens(
+  chainId: string,
+  options?: BinanceRequestOptions,
+): Promise<BinanceEnvelope<RwaTokenListRow[]>> {
   return binanceSignedGet<RwaTokenListRow[]>("/api/v1/dex/market/rwa/tokens", {
     binanceChainId: chainId,
-  });
+  }, options);
 }
 
 export function getRwaPrices(
   chainId: string,
   contracts: string[],
+  options?: BinanceRequestOptions,
 ): Promise<BinanceEnvelope<RwaPriceRow[]>> {
   return binanceSignedGet<RwaPriceRow[]>("/api/v1/dex/market/rwa/price", {
     binanceChainId: chainId,
     tokenContractAddresses: contracts.join(","),
-  });
+  }, options);
 }
 
-export function getRwaPrice(chainId: string, contract: string): Promise<BinanceEnvelope<RwaPriceRow[]>> {
-  return getRwaPrices(chainId, [contract]);
+export function getRwaPrice(
+  chainId: string,
+  contract: string,
+  options?: BinanceRequestOptions,
+): Promise<BinanceEnvelope<RwaPriceRow[]>> {
+  return getRwaPrices(chainId, [contract], options);
 }
 
-export function getUnderlyingMarket(chainId: string, contract: string): Promise<BinanceEnvelope<RwaMarketData>> {
+export function getUnderlyingMarket(
+  chainId: string,
+  contract: string,
+  options?: BinanceRequestOptions,
+): Promise<BinanceEnvelope<RwaMarketData>> {
   return binanceSignedGet<RwaMarketData>("/api/v1/dex/market/rwa/underlying-market", {
     binanceChainId: chainId,
     tokenContractAddress: contract,
-  });
+  }, options);
 }
 
-export function getUnderlyingProfile(chainId: string, contract: string): Promise<BinanceEnvelope<RwaProfile>> {
+export function getUnderlyingProfile(
+  chainId: string,
+  contract: string,
+  options?: BinanceRequestOptions,
+): Promise<BinanceEnvelope<RwaProfile>> {
   return binanceSignedGet<RwaProfile>("/api/v1/dex/market/rwa/underlying-profile", {
     binanceChainId: chainId,
     tokenContractAddress: contract,
-  });
+  }, options);
 }

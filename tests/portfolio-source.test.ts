@@ -6,6 +6,17 @@ const VALID = "0x1111111111111111111111111111111111111111";
 const MISSING_IDENTITY = "0x2222222222222222222222222222222222222222";
 
 describe("portfolio universe validation", () => {
+  it("marks an empty configured-chain universe unavailable", () => {
+    expect(preparePortfolioUniverse([], "56")).toEqual({
+      status: "UNAVAILABLE",
+      reason: "NO_VALIDATED_WRAPPERS_FOR_CONFIGURED_CHAIN",
+      receivedCount: 0,
+      chainCandidateCount: 0,
+      entries: [],
+      rejected: [],
+    });
+  });
+
   it("requires explicit source-backed identity and excludes wrong-chain assets", () => {
     const result = preparePortfolioUniverse(
       [
@@ -52,6 +63,12 @@ describe("portfolio universe validation", () => {
         wrapper: expect.objectContaining({ contractAddress: VALID }),
       }),
     ]);
+    expect(result).toMatchObject({
+      status: "PARTIAL",
+      reason: "UNIVERSE_ROWS_REJECTED",
+      receivedCount: 4,
+      chainCandidateCount: 3,
+    });
     expect(result.rejected).toEqual(
       expect.arrayContaining([
         {

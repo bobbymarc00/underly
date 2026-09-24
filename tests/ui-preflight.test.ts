@@ -10,7 +10,9 @@ describe("Underly v0.4 Preflight UI", () => {
   it("mounts Preflight as an additive stock-detail surface", () => {
     const terminal = file("src/components/market/StockTerminal.tsx");
     expect(terminal).toContain('import { PreflightPanel } from "./PreflightPanel"');
-    expect(terminal).toContain("<PreflightPanel ticker={ticker} />");
+    expect(terminal).toContain(
+      '<PreflightPanel key={`preflight:${ticker}`} ticker={ticker} />',
+    );
   });
 
   it("uses the dedicated preflight endpoint and keeps the UI unsigned", () => {
@@ -31,5 +33,14 @@ describe("Underly v0.4 Preflight UI", () => {
     expect(panel).toContain("NO AUTOMATIC WRAPPER SELECTION");
     expect(route).toContain("does not select a best wrapper");
     expect(route).not.toContain("selectedWrapper");
+  });
+
+  it("aborts and rejects stale responses when context changes", () => {
+    const panel = file("src/components/market/PreflightPanel.tsx");
+    expect(panel).toContain("requestSequenceRef");
+    expect(panel).toContain("requestControllerRef.current?.abort()");
+    expect(panel).toContain("signal: controller.signal");
+    expect(panel).toContain("Preflight response context mismatch");
+    expect(panel).toContain("invalidateRequest()");
   });
 });

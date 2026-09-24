@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   formatNumber,
@@ -20,14 +20,6 @@ export interface ContinuityContext {
   sourceContractAddress: string;
   sourceTokenAmount: string;
 }
-
-type AssetGraphResponse = {
-  underlyings?: Array<{
-    ticker: string;
-    deployments: Deployment[];
-  }>;
-  error?: string;
-};
 
 type ContinuityResponse = {
   version: string;
@@ -122,80 +114,69 @@ function continuityTone(
 export function ContinuityPanel({
   ticker,
   initialContext,
+  discovery,
 }: {
   ticker: string;
   initialContext?: ContinuityContext | null;
+  discovery: {
+    deployments: Deployment[];
+    error: string | null;
+    loading: boolean;
+  };
 }) {
-  const [deployments, setDeployments] = useState<Deployment[]>([]);
   const [sourceContract, setSourceContract] = useState("");
   const [sourceAmount, setSourceAmount] = useState("1");
   const [result, setResult] = useState<ContinuityResponse | null>(null);
-  const [discoveryError, setDiscoveryError] = useState<string | null>(null);
   const [requestError, setRequestError] = useState<string | null>(null);
-  const [discovering, setDiscovering] = useState(true);
   const [loading, setLoading] = useState(false);
+  const requestControllerRef = useRef<AbortController | null>(null);
+  const requestSequenceRef = useRef(0);
+
+  function invalidateRequest() {
+    requestSequenceRef.current += 1;
+    requestControllerRef.current?.abort();
+    requestControllerRef.current = null;
+    setLoading(false);
+    setResult(null);
+    setRequestError(null);
+  }
 
   useEffect(() => {
-    const controller = new AbortController();
+    requestSequenceRef.current += 1;
+    requestControllerRef.current?.abort();
+    requestControllerRef.current = null;
 
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reset stale ticker/context state before async discovery
-    setDeployments([]);
     setSourceContract("");
     setSourceAmount("1");
     setResult(null);
-    setDiscoveryError(null);
-    setDiscovering(true);
+    setRequestError(null);
+    setLoading(false);
 
-    fetch(`/api/asset-graph?ticker=${encodeURIComponent(ticker)}`, {
-      cache: "no-store",
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        const body = (await response.json()) as AssetGraphResponse;
+    if (discovery.deployments.length) {
+      const requestedSource = initialContext
+        ? discovery.deployments.find(
+            (deployment) =>
+              deployment.contractAddress.toLowerCase() ===
+              initialContext.sourceContractAddress.toLowerCase(),
+          )
+        : null;
+      if (requestedSource && initialContext) {
+        setSourceContract(requestedSource.contractAddress);
+        setSourceAmount(initialContext.sourceTokenAmount);
+      } else {
+        setSourceContract(discovery.deployments[0].contractAddress);
+      }
+    }
 
-        if (!response.ok) {
-          throw new Error(body.error ?? `HTTP ${response.status}`);
-        }
+    return () => {
+      requestControllerRef.current?.abort();
+    };
+  }, [discovery.deployments, initialContext, ticker]);
 
-        return body;
-      })
-      .then((body) => {
-        const next = body.underlyings?.[0]?.deployments ?? [];
-        setDeployments(next);
-
-        if (next.length) {
-          const requestedSource = initialContext
-            ? next.find(
-                (deployment) =>
-                  deployment.contractAddress.toLowerCase() ===
-                  initialContext.sourceContractAddress.toLowerCase(),
-              )
-            : null;
-          if (requestedSource && initialContext) {
-            setSourceContract(requestedSource.contractAddress);
-            setSourceAmount(initialContext.sourceTokenAmount);
-          } else {
-            setSourceContract(next[0].contractAddress);
-          }
-        }
-      })
-      .catch((caught) => {
-        if (controller.signal.aborted) return;
-
-        setDiscoveryError(
-          caught instanceof Error
-            ? caught.message
-            : "Wrapper discovery failed",
-        );
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) {
-          setDiscovering(false);
-        }
-      });
-
-    return () => controller.abort();
-  }, [initialContext, ticker]);
+  const deployments = discovery.deployments;
+  const discoveryError = discovery.error;
+  const discovering = discovery.loading;
 
   const selectedSource = useMemo(
     () =>
@@ -212,6 +193,15 @@ export function ContinuityPanel({
 
     if (!sourceContract) return;
 
+    requestControllerRef.current?.abort();
+    const controller = new AbortController();
+    requestControllerRef.current = controller;
+    const requestSequence = requestSequenceRef.current + 1;
+    requestSequenceRef.current = requestSequence;
+    const requestedTicker = ticker;
+    const requestedContract = sourceContract;
+    const requestedAmount = sourceAmount;
+
     setLoading(true);
     setRequestError(null);
     setResult(null);
@@ -223,9 +213,10 @@ export function ContinuityPanel({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          sourceContractAddress: sourceContract,
-          sourceTokenAmount: sourceAmount,
+          sourceContractAddress: requestedContract,
+          sourceTokenAmount: requestedAmount,
         }),
+        signal: controller.signal,
       });
 
       const body = (await response.json()) as ContinuityResponse;
@@ -234,20 +225,45 @@ export function ContinuityPanel({
         throw new Error(body.error ?? `HTTP ${response.status}`);
       }
 
+      if (
+        controller.signal.aborted ||
+        requestSequenceRef.current !== requestSequence
+      ) {
+        return;
+      }
+
+      if (
+        body.ticker.toUpperCase() !== requestedTicker.toUpperCase() ||
+        body.request.sourceContractAddress.toLowerCase() !==
+          requestedContract.toLowerCase()
+      ) {
+        throw new Error("Continuity response context mismatch");
+      }
+
       setResult(body);
     } catch (caught) {
+      if (
+        controller.signal.aborted ||
+        requestSequenceRef.current !== requestSequence
+      ) {
+        return;
+      }
+
       setRequestError(
         caught instanceof Error
           ? caught.message
           : "Continuity analysis failed",
       );
     } finally {
-      setLoading(false);
+      if (requestSequenceRef.current === requestSequence) {
+        requestControllerRef.current = null;
+        setLoading(false);
+      }
     }
   }
 
   return (
-    <section className="tm-shell tm-continuity">
+    <section id="continuity" className="tm-shell tm-continuity">
       <div className="tm-continuity-head">
         <div>
           <span className="tm-eyebrow">
@@ -268,7 +284,7 @@ export function ContinuityPanel({
               value={sourceContract}
               onChange={(event) => {
                 setSourceContract(event.target.value);
-                setResult(null);
+                invalidateRequest();
               }}
               disabled={discovering || deployments.length === 0}
               aria-label="Continuity source representation"
@@ -285,6 +301,8 @@ export function ContinuityPanel({
                   key={deployment.contractAddress}
                 >
                   {providerLabel(deployment.provider)} · {deployment.symbol}
+                  {" · "}
+                  {deployment.contractAddress}
                 </option>
               ))}
             </select>
@@ -295,7 +313,10 @@ export function ContinuityPanel({
             <input
               inputMode="decimal"
               value={sourceAmount}
-              onChange={(event) => setSourceAmount(event.target.value)}
+              onChange={(event) => {
+                setSourceAmount(event.target.value);
+                invalidateRequest();
+              }}
               aria-label="Continuity source token amount"
             />
           </label>

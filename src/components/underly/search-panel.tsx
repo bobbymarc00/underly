@@ -19,6 +19,11 @@ interface SearchPanelProps {
 const positiveDecimal = /^\d+(?:\.\d+)?$/;
 const contractPattern = /^0x[a-fA-F0-9]{40}$/;
 
+export function shouldClearSearchDiscovery(query: string): boolean {
+  const normalized = query.trim();
+  return normalized.length < 1 || contractPattern.test(normalized);
+}
+
 function defaultSizeMode(intent: Intent): SizeMode {
   if (intent === "HOLD") return "NONE";
   if (intent === "BUY") return "USD";
@@ -44,11 +49,7 @@ export function SearchPanel({ loading, onRun }: SearchPanelProps) {
 
   useEffect(() => {
     const q = query.trim();
-    if (q.length < 1 || contractPattern.test(q)) {
-      setItems([]);
-      setSearchError(null);
-      return;
-    }
+    if (shouldClearSearchDiscovery(q)) return;
 
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
@@ -75,6 +76,14 @@ export function SearchPanel({ loading, onRun }: SearchPanelProps) {
       window.clearTimeout(timer);
     };
   }, [query]);
+
+  function changeQuery(nextQuery: string) {
+    setQuery(nextQuery);
+    if (shouldClearSearchDiscovery(nextQuery)) {
+      setItems([]);
+      setSearchError(null);
+    }
+  }
 
   function changeIntent(next: Intent) {
     setIntent(next);
@@ -138,7 +147,7 @@ export function SearchPanel({ loading, onRun }: SearchPanelProps) {
               value={query}
               onFocus={() => setFocused(true)}
               onBlur={() => window.setTimeout(() => setFocused(false), 120)}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => changeQuery(event.target.value)}
               autoComplete="off"
               spellCheck={false}
               placeholder="NVDA or 0x…"
