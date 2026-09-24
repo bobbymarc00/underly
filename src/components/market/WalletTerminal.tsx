@@ -358,235 +358,6 @@ export function WalletTerminal() {
         </form>
       </section>
 
-      <section className="tm-shell tm-portfolio-compare">
-        <div className="tm-section-head tm-section-head-tight">
-          <div>
-            <span>PORTFOLIO SNAPSHOT COMPARISON · SESSION MEMORY</span>
-            <h2>Compare two manual captures.</h2>
-          </div>
-          <small className="tm-portfolio-method">
-            Exact chain + contract identity · client-supplied portfolio responses
-          </small>
-        </div>
-
-        <p className="tm-comparison-disclaimer">
-          Capture the currently displayed portfolio as A, inspect the same public
-          wallet again later, then capture B. Refreshing or closing this page
-          removes both snapshots because v0.9-A does not persist them.
-        </p>
-
-        <div className="tm-comparison-controls">
-          <button
-            type="button"
-            disabled={!capturableResult}
-            onClick={() => captureSnapshot("A")}
-          >
-            CAPTURE SNAPSHOT A
-          </button>
-          <button
-            type="button"
-            disabled={!capturableResult}
-            onClick={() => captureSnapshot("B")}
-          >
-            CAPTURE SNAPSHOT B
-          </button>
-          <button
-            type="button"
-            disabled={!snapshotA || !snapshotB || comparisonLoading}
-            onClick={compareSnapshots}
-          >
-            {comparisonLoading ? "COMPARING…" : "COMPARE"}
-          </button>
-        </div>
-
-        <div className="tm-comparison-snapshots">
-          {(["A", "B"] as const).map((slot) => {
-            const captured = slot === "A" ? snapshotA : snapshotB;
-            return (
-              <article key={slot}>
-                <span>SNAPSHOT {slot}</span>
-                {captured ? (
-                  <>
-                    <strong>BLOCK {captured.snapshot?.blockNumber ?? "UNKNOWN"}</strong>
-                    <small>TAG {captured.snapshot?.blockTag ?? "UNKNOWN"}</small>
-                    <small>{formatTimestamp(captured.generatedAt)}</small>
-                    <small>
-                      {captured.status} · {captured.summary?.positionCount ?? "UNKNOWN"} position(s)
-                    </small>
-                    <small>
-                      Universe {captured.universe?.status ?? "UNKNOWN"} · valuation coverage {captured.exposures?.coverage.valuationCoveragePct ?? "UNKNOWN"}% · block time {captured.snapshot?.blockTimestampStatus === "AVAILABLE" && captured.snapshot.blockTimestamp ? formatTimestamp(captured.snapshot.blockTimestamp) : "UNKNOWN"}
-                    </small>
-                  </>
-                ) : (
-                  <strong>NOT CAPTURED</strong>
-                )}
-              </article>
-            );
-          })}
-        </div>
-
-        {comparisonError && (
-          <div className="tm-callout tm-callout-error tm-comparison-error">
-            <span>COMPARISON UNAVAILABLE</span>
-            <strong>{comparisonError}</strong>
-          </div>
-        )}
-
-        {displayedComparison && (
-          <div className="tm-comparison-result">
-            <div className="tm-comparison-summary">
-              <div>
-                <span>RESULT</span>
-                <strong>{displayedComparison.changeSummary.replaceAll("_", " ")}</strong>
-              </div>
-              <div>
-                <span>BLOCK ORDER</span>
-                <strong>
-                  {displayedComparison.order.status} · Δ {displayedComparison.order.blockDelta}
-                </strong>
-              </div>
-              <div>
-                <span>COMPARABLE VALUE Δ</span>
-                <strong>
-                  {signedEvidence(
-                    displayedComparison.valueComparison
-                      .signedIndicativeValueDeltaUsd,
-                    " USD",
-                  )}
-                </strong>
-              </div>
-              <div>
-                <span>COMPARABLE COVERAGE</span>
-                <strong>
-                  {displayedComparison.valueComparison.comparablePositionCount}/
-                  {displayedComparison.coverage.candidateContractCount} position(s)
-                </strong>
-              </div>
-              <div>
-                <span>OBSERVED DATA DIFFERENCES</span>
-                <strong>
-                  {displayedComparison.coverage.observedDataDifferenceCount} position(s) · {displayedComparison.coverage.changedPositionCount} balance change(s)
-                </strong>
-              </div>
-            </div>
-
-            <p className="tm-comparison-disclaimer">
-              Snapshot totals remain separate: A known value {formatUsd(
-                displayedComparison.snapshots.A.knownIndicativeValueUsd,
-              )} ({displayedComparison.snapshots.A.valuationCoveragePct ?? "UNKNOWN"}% coverage), B known value {formatUsd(
-                displayedComparison.snapshots.B.knownIndicativeValueUsd,
-              )} ({displayedComparison.snapshots.B.valuationCoveragePct ?? "UNKNOWN"}% coverage). The comparable delta above includes only exact wrapper positions with evidence on both sides.
-            </p>
-
-            <div className="tm-exposure-breakdown">
-              <div className="tm-exposure-breakdown-head">
-                <span>PER UNDERLYING</span>
-                <small>Verified identity only · comparable wrappers only</small>
-              </div>
-              {displayedComparison.underlyings.length === 0 ? (
-                <div className="tm-empty-holdings">
-                  <strong>No comparable verified-underlying exposure.</strong>
-                </div>
-              ) : (
-                <div className="tm-comparison-grid">
-                  {displayedComparison.underlyings.map((item) => (
-                    <article key={item.identity}>
-                      <div>
-                        <strong>{item.ticker}</strong>
-                        <em data-state={item.status}>{item.status}</em>
-                      </div>
-                      <small>{item.identity}</small>
-                      <dl>
-                        <div>
-                          <dt>SHARES A → B</dt>
-                          <dd>
-                            {item.underlyingEquivalentSharesA ?? "UNKNOWN"} → {item.underlyingEquivalentSharesB ?? "UNKNOWN"}
-                          </dd>
-                        </div>
-                        <div>
-                          <dt>SHARE Δ</dt>
-                          <dd>{signedEvidence(item.signedUnderlyingEquivalentShareDelta)}</dd>
-                        </div>
-                        <div>
-                          <dt>VALUE A → B</dt>
-                          <dd>
-                            {item.comparableIndicativeValueUsdA} → {item.comparableIndicativeValueUsdB} USD
-                          </dd>
-                        </div>
-                        <div>
-                          <dt>COMPARABLE VALUE Δ</dt>
-                          <dd>{signedEvidence(item.signedComparableIndicativeValueDeltaUsd, " USD")}</dd>
-                        </div>
-                        <div>
-                          <dt>WRAPPERS</dt>
-                          <dd>{item.positionKeys.length}</dd>
-                        </div>
-                      </dl>
-                    </article>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="tm-exposure-breakdown">
-              <div className="tm-exposure-breakdown-head">
-                <span>PER CONTRACT</span>
-                <small>No BUY / SELL / transfer inference</small>
-              </div>
-              {displayedComparison.positions.length === 0 ? (
-                <div className="tm-empty-holdings">
-                  <strong>NO OBSERVED CHANGE</strong>
-                  <p>No positive or unknown wrapper position required comparison.</p>
-                </div>
-              ) : (
-                <div className="tm-comparison-grid">
-                  {displayedComparison.positions.map((item) => (
-                    <article key={item.positionKey}>
-                      <div>
-                        <strong>{item.symbol ?? "UNKNOWN WRAPPER"}</strong>
-                        <em data-state={item.change}>{item.change}</em>
-                      </div>
-                      <small title={item.contractAddress}>
-                        {item.chainId} · {compactAddress(item.contractAddress)}
-                      </small>
-                      <dl>
-                        <div>
-                          <dt>TOKEN QUANTITY Δ</dt>
-                          <dd>{signedEvidence(item.quantity.signedTokenQuantityDelta)}</dd>
-                        </div>
-                        <div>
-                          <dt>EQUIVALENT SHARE Δ</dt>
-                          <dd>{signedEvidence(item.equivalence.signedUnderlyingEquivalentShareDelta)}</dd>
-                        </div>
-                        <div>
-                          <dt>INDICATIVE VALUE Δ</dt>
-                          <dd>{signedEvidence(item.valuation.signedIndicativeValueDeltaUsd, " USD")}</dd>
-                        </div>
-                      </dl>
-                      <small>
-                        Balance A/B {item.balance.A.state} {item.balance.A.rawBaseUnits ?? "UNKNOWN"} → {item.balance.B.state} {item.balance.B.rawBaseUnits ?? "UNKNOWN"}
-                      </small>
-                      <small>
-                        Quantity A/B {item.quantity.tokenQuantityA ?? "UNKNOWN"} → {item.quantity.tokenQuantityB ?? "UNKNOWN"}
-                      </small>
-                      <small>
-                        Ratio A/B {item.equivalence.tokenShareRatioA ?? "UNKNOWN"} → {item.equivalence.tokenShareRatioB ?? "UNKNOWN"} · Price A/B {item.valuation.tokenPriceUsdA ?? "UNKNOWN"} → {item.valuation.tokenPriceUsdB ?? "UNKNOWN"} USD
-                      </small>
-                    </article>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="tm-comparison-warnings">
-              {displayedComparison.warnings.map((warning) => (
-                <p key={warning}>{warning}</p>
-              ))}
-            </div>
-          </div>
-        )}
-      </section>
-
       {error && (
         <section className="tm-shell">
           <div className="tm-callout tm-callout-error">
@@ -1057,6 +828,234 @@ export function WalletTerminal() {
           </section>
         </>
       )}
+      <section className="tm-shell tm-portfolio-compare">
+        <div className="tm-section-head tm-section-head-tight">
+          <div>
+            <span>PORTFOLIO SNAPSHOT COMPARISON · SESSION MEMORY</span>
+            <h2>Compare two manual captures.</h2>
+          </div>
+          <small className="tm-portfolio-method">
+            Exact chain + contract identity · client-supplied portfolio responses
+          </small>
+        </div>
+
+        <p className="tm-comparison-disclaimer">
+          Capture the currently displayed portfolio as A, inspect the same public
+          wallet again later, then capture B. Refreshing or closing this page
+          removes both snapshots because v0.9-A does not persist them.
+        </p>
+
+        <div className="tm-comparison-controls">
+          <button
+            type="button"
+            disabled={!capturableResult}
+            onClick={() => captureSnapshot("A")}
+          >
+            CAPTURE SNAPSHOT A
+          </button>
+          <button
+            type="button"
+            disabled={!capturableResult}
+            onClick={() => captureSnapshot("B")}
+          >
+            CAPTURE SNAPSHOT B
+          </button>
+          <button
+            type="button"
+            disabled={!snapshotA || !snapshotB || comparisonLoading}
+            onClick={compareSnapshots}
+          >
+            {comparisonLoading ? "COMPARING…" : "COMPARE"}
+          </button>
+        </div>
+
+        <div className="tm-comparison-snapshots">
+          {(["A", "B"] as const).map((slot) => {
+            const captured = slot === "A" ? snapshotA : snapshotB;
+            return (
+              <article key={slot}>
+                <span>SNAPSHOT {slot}</span>
+                {captured ? (
+                  <>
+                    <strong>BLOCK {captured.snapshot?.blockNumber ?? "UNKNOWN"}</strong>
+                    <small>TAG {captured.snapshot?.blockTag ?? "UNKNOWN"}</small>
+                    <small>{formatTimestamp(captured.generatedAt)}</small>
+                    <small>
+                      {captured.status} · {captured.summary?.positionCount ?? "UNKNOWN"} position(s)
+                    </small>
+                    <small>
+                      Universe {captured.universe?.status ?? "UNKNOWN"} · valuation coverage {captured.exposures?.coverage.valuationCoveragePct ?? "UNKNOWN"}% · block time {captured.snapshot?.blockTimestampStatus === "AVAILABLE" && captured.snapshot.blockTimestamp ? formatTimestamp(captured.snapshot.blockTimestamp) : "UNKNOWN"}
+                    </small>
+                  </>
+                ) : (
+                  <strong>NOT CAPTURED</strong>
+                )}
+              </article>
+            );
+          })}
+        </div>
+
+        {comparisonError && (
+          <div className="tm-callout tm-callout-error tm-comparison-error">
+            <span>COMPARISON UNAVAILABLE</span>
+            <strong>{comparisonError}</strong>
+          </div>
+        )}
+
+        {displayedComparison && (
+          <div className="tm-comparison-result">
+            <div className="tm-comparison-summary">
+              <div>
+                <span>RESULT</span>
+                <strong>{displayedComparison.changeSummary.replaceAll("_", " ")}</strong>
+              </div>
+              <div>
+                <span>BLOCK ORDER</span>
+                <strong>
+                  {displayedComparison.order.status} · Δ {displayedComparison.order.blockDelta}
+                </strong>
+              </div>
+              <div>
+                <span>COMPARABLE VALUE Δ</span>
+                <strong>
+                  {signedEvidence(
+                    displayedComparison.valueComparison
+                      .signedIndicativeValueDeltaUsd,
+                    " USD",
+                  )}
+                </strong>
+              </div>
+              <div>
+                <span>COMPARABLE COVERAGE</span>
+                <strong>
+                  {displayedComparison.valueComparison.comparablePositionCount}/
+                  {displayedComparison.coverage.candidateContractCount} position(s)
+                </strong>
+              </div>
+              <div>
+                <span>OBSERVED DATA DIFFERENCES</span>
+                <strong>
+                  {displayedComparison.coverage.observedDataDifferenceCount} position(s) · {displayedComparison.coverage.changedPositionCount} balance change(s)
+                </strong>
+              </div>
+            </div>
+
+            <p className="tm-comparison-disclaimer">
+              Snapshot totals remain separate: A known value {formatUsd(
+                displayedComparison.snapshots.A.knownIndicativeValueUsd,
+              )} ({displayedComparison.snapshots.A.valuationCoveragePct ?? "UNKNOWN"}% coverage), B known value {formatUsd(
+                displayedComparison.snapshots.B.knownIndicativeValueUsd,
+              )} ({displayedComparison.snapshots.B.valuationCoveragePct ?? "UNKNOWN"}% coverage). The comparable delta above includes only exact wrapper positions with evidence on both sides.
+            </p>
+
+            <div className="tm-exposure-breakdown">
+              <div className="tm-exposure-breakdown-head">
+                <span>PER UNDERLYING</span>
+                <small>Verified identity only · comparable wrappers only</small>
+              </div>
+              {displayedComparison.underlyings.length === 0 ? (
+                <div className="tm-empty-holdings">
+                  <strong>No comparable verified-underlying exposure.</strong>
+                </div>
+              ) : (
+                <div className="tm-comparison-grid">
+                  {displayedComparison.underlyings.map((item) => (
+                    <article key={item.identity}>
+                      <div>
+                        <strong>{item.ticker}</strong>
+                        <em data-state={item.status}>{item.status}</em>
+                      </div>
+                      <small>{item.identity}</small>
+                      <dl>
+                        <div>
+                          <dt>SHARES A → B</dt>
+                          <dd>
+                            {item.underlyingEquivalentSharesA ?? "UNKNOWN"} → {item.underlyingEquivalentSharesB ?? "UNKNOWN"}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>SHARE Δ</dt>
+                          <dd>{signedEvidence(item.signedUnderlyingEquivalentShareDelta)}</dd>
+                        </div>
+                        <div>
+                          <dt>VALUE A → B</dt>
+                          <dd>
+                            {item.comparableIndicativeValueUsdA} → {item.comparableIndicativeValueUsdB} USD
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>COMPARABLE VALUE Δ</dt>
+                          <dd>{signedEvidence(item.signedComparableIndicativeValueDeltaUsd, " USD")}</dd>
+                        </div>
+                        <div>
+                          <dt>WRAPPERS</dt>
+                          <dd>{item.positionKeys.length}</dd>
+                        </div>
+                      </dl>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="tm-exposure-breakdown">
+              <div className="tm-exposure-breakdown-head">
+                <span>PER CONTRACT</span>
+                <small>No BUY / SELL / transfer inference</small>
+              </div>
+              {displayedComparison.positions.length === 0 ? (
+                <div className="tm-empty-holdings">
+                  <strong>NO OBSERVED CHANGE</strong>
+                  <p>No positive or unknown wrapper position required comparison.</p>
+                </div>
+              ) : (
+                <div className="tm-comparison-grid">
+                  {displayedComparison.positions.map((item) => (
+                    <article key={item.positionKey}>
+                      <div>
+                        <strong>{item.symbol ?? "UNKNOWN WRAPPER"}</strong>
+                        <em data-state={item.change}>{item.change}</em>
+                      </div>
+                      <small title={item.contractAddress}>
+                        {item.chainId} · {compactAddress(item.contractAddress)}
+                      </small>
+                      <dl>
+                        <div>
+                          <dt>TOKEN QUANTITY Δ</dt>
+                          <dd>{signedEvidence(item.quantity.signedTokenQuantityDelta)}</dd>
+                        </div>
+                        <div>
+                          <dt>EQUIVALENT SHARE Δ</dt>
+                          <dd>{signedEvidence(item.equivalence.signedUnderlyingEquivalentShareDelta)}</dd>
+                        </div>
+                        <div>
+                          <dt>INDICATIVE VALUE Δ</dt>
+                          <dd>{signedEvidence(item.valuation.signedIndicativeValueDeltaUsd, " USD")}</dd>
+                        </div>
+                      </dl>
+                      <small>
+                        Balance A/B {item.balance.A.state} {item.balance.A.rawBaseUnits ?? "UNKNOWN"} → {item.balance.B.state} {item.balance.B.rawBaseUnits ?? "UNKNOWN"}
+                      </small>
+                      <small>
+                        Quantity A/B {item.quantity.tokenQuantityA ?? "UNKNOWN"} → {item.quantity.tokenQuantityB ?? "UNKNOWN"}
+                      </small>
+                      <small>
+                        Ratio A/B {item.equivalence.tokenShareRatioA ?? "UNKNOWN"} → {item.equivalence.tokenShareRatioB ?? "UNKNOWN"} · Price A/B {item.valuation.tokenPriceUsdA ?? "UNKNOWN"} → {item.valuation.tokenPriceUsdB ?? "UNKNOWN"} USD
+                      </small>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="tm-comparison-warnings">
+              {displayedComparison.warnings.map((warning) => (
+                <p key={warning}>{warning}</p>
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
     </main>
   );
 }

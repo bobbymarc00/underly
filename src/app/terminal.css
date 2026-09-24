@@ -7,7 +7,7 @@
   --tm-line-strong: #363d3a;
   --tm-text: #eef2ec;
   --tm-muted: #8b9690;
-  --tm-muted-2: #616b66;
+  --tm-muted-2: #78837d;
   --tm-accent: #d8ff45;
   --tm-accent-soft: rgba(216, 255, 69, 0.08);
   --tm-orange: #ff9d3f;
@@ -958,6 +958,7 @@ body {
 
 .tm-fund-grid strong {
   font-size: 13px;
+  line-height: 1.15;
 }
 
 .tm-fund-grid small {
@@ -1071,11 +1072,27 @@ body {
 }
 
 @media (max-width: 1050px) {
+  .tm-header {
+    height: auto;
+  }
+
   .tm-header-inner {
     grid-template-columns: auto 1fr auto;
+    height: auto;
+    min-height: 62px;
+    padding: 9px 0 8px;
+    row-gap: 7px;
   }
 
   .tm-nav {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-content: flex-start;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tm-nav::-webkit-scrollbar {
     display: none;
   }
 
@@ -1098,9 +1115,15 @@ body {
     grid-column: 1 / -1;
   }
 
-  .tm-wrapper-row {
-    grid-template-columns: minmax(220px, 1.2fr) repeat(5, 130px);
+  .tm-wrapper-rows {
     overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-color: var(--tm-line-strong) transparent;
+  }
+
+  .tm-wrapper-row {
+    min-width: 870px;
+    grid-template-columns: minmax(220px, 1.2fr) repeat(5, 130px);
   }
 
   .tm-overview-grid {
@@ -1121,7 +1144,8 @@ body {
     min-height: 58px;
     width: calc(100% - 20px);
     grid-template-columns: auto 1fr;
-    gap: 12px;
+    column-gap: 12px;
+    row-gap: 7px;
   }
 
   .tm-header-search {
@@ -1134,6 +1158,16 @@ body {
 
   .tm-brand > span:last-child {
     display: none;
+  }
+
+  .tm-nav {
+    width: 100%;
+  }
+
+  .tm-nav a {
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
   }
 
   .tm-market-intro {
@@ -5453,5 +5487,154 @@ body {
 
   .tm-position-actions small {
     text-align: left;
+  }
+}
+
+/* UNDERLY_V10E_PREMIUM_UI_POLISH */
+.tm-app :is(a, button, input, select):focus-visible {
+  outline: 2px solid var(--tm-cyan);
+  outline-offset: 3px;
+}
+
+.tm-app [id] {
+  scroll-margin-top: 86px;
+}
+
+.tm-market-intro {
+  padding-top: 36px;
+  padding-bottom: 40px;
+}
+
+.tm-market-intro-grid {
+  grid-template-columns: minmax(0, 1.08fr) minmax(360px, .92fr);
+  gap: 56px;
+}
+
+.tm-market-intro h1 {
+  font-size: clamp(46px, 5.6vw, 80px);
+}
+
+.tm-market-intro p {
+  margin-top: 18px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.tm-wallet-head {
+  padding-top: 36px;
+  padding-bottom: 30px;
+}
+
+.tm-wallet-head h1 {
+  font-size: clamp(42px, 5.3vw, 68px);
+}
+
+.tm-wallet-form {
+  margin-top: 24px;
+}
+
+.tm-snapshot-note,
+.tm-comparison-disclaimer,
+.tm-comparison-snapshots small,
+.tm-comparison-warnings p {
+  font-size: 9px;
+}
+
+.tm-product-path a,
+.tm-comparison-controls button {
+  font-size: 8px;
+}
+
+.tm-product-path a {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.tm-wrapper-row span,
+.tm-wrapper-row em,
+.tm-wrapper-row small {
+  font-size: 8px;
+}
+
+.tm-wrapper-id small {
+  color: #a4afa9;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  line-height: 1.4;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  user-select: all;
+  white-space: normal;
+}
+
+.tm-contract-copy {
+  width: max-content;
+  margin-top: 2px;
+  padding: 2px 0;
+  border: 0;
+  color: var(--tm-cyan);
+  background: transparent;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: .1em;
+  cursor: pointer;
+}
+
+.tm-contract-copy:hover {
+  color: var(--tm-text);
+}
+
+@media (max-width: 1050px) {
+  .tm-app [id] {
+    scroll-margin-top: 118px;
+  }
+
+  .tm-market-intro-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+}
+
+@media (max-width: 640px) {
+  .tm-market-intro {
+    padding-top: 22px;
+    padding-bottom: 26px;
+  }
+
+  .tm-market-intro h1 {
+    font-size: 42px;
+  }
+
+  .tm-market-intro p {
+    margin-top: 16px;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .tm-wallet-head {
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+
+  .tm-wallet-head h1 {
+    font-size: 38px;
+    line-height: 1.02;
+  }
+
+  .tm-comparison-disclaimer,
+  .tm-comparison-snapshots small,
+  .tm-comparison-warnings p {
+    font-size: 9px;
+    line-height: 1.6;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-app *,
+  .tm-app *::before,
+  .tm-app *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
   }
 }

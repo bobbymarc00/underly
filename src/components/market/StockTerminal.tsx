@@ -91,6 +91,13 @@ function fieldEvidenceNote(
     return "No usable provider value";
   }
 
+  if (resolved.status === "SINGLE_SOURCE") {
+    const source = resolved.evidence[0];
+    return source
+      ? `${providerLabel(source.provider)} only`
+      : "One usable provider source";
+  }
+
   if (resolved.status !== "CONFLICT") {
     return null;
   }
@@ -106,6 +113,15 @@ function fieldEvidenceNote(
       return `${providerLabel(item.provider)} ${value}`;
     })
     .join(" · ");
+}
+
+function resolvedFieldDisplay(
+  resolved: ResolvedField | null,
+  isMoney: boolean,
+): string {
+  if (!resolved || resolved.status === "UNKNOWN") return "UNKNOWN";
+  if (resolved.status === "CONFLICT") return "NO CONSENSUS";
+  return isMoney ? money(resolved.value) : plain(resolved.value);
 }
 
 function fundLikeIndustry(value: string | null): boolean {
@@ -127,6 +143,24 @@ export function StockTerminal({
     deployments: AssetGraphDeployment[];
     error: string | null;
   } | null>(null);
+  const [copiedContract, setCopiedContract] = useState<string | null>(null);
+  const [copyUnavailableContract, setCopyUnavailableContract] = useState<
+    string | null
+  >(null);
+
+  async function copyExactContract(contractAddress: string): Promise<void> {
+    try {
+      if (!navigator.clipboard) {
+        throw new Error("Clipboard API unavailable");
+      }
+      await navigator.clipboard.writeText(contractAddress);
+      setCopiedContract(contractAddress);
+      setCopyUnavailableContract(null);
+    } catch {
+      setCopiedContract(null);
+      setCopyUnavailableContract(contractAddress);
+    }
+  }
 
   useEffect(() => {
     const controller = new AbortController();
@@ -309,6 +343,18 @@ export function StockTerminal({
                 <em>{providerLabel(wrapper.provider)}</em>
                 <strong>{wrapper.symbol}</strong>
                 <small>{wrapper.contractAddress}</small>
+                <button
+                  type="button"
+                  className="tm-contract-copy"
+                  aria-label={`Copy exact contract ${wrapper.contractAddress}`}
+                  onClick={() => void copyExactContract(wrapper.contractAddress)}
+                >
+                  {copiedContract === wrapper.contractAddress
+                    ? "COPIED"
+                    : copyUnavailableContract === wrapper.contractAddress
+                      ? "COPY UNAVAILABLE"
+                      : "COPY CONTRACT"}
+                </button>
               </div>
               <div>
                 <span>REFERENCE</span>
@@ -421,14 +467,14 @@ export function StockTerminal({
                 fundamentals,
                 String(key),
               );
+              const evidenceNote = fieldEvidenceNote(
+                resolved,
+                Boolean(isMoney),
+              );
               return (
                 <div key={String(key)}>
                   <span>{label}</span>
-                  <strong>
-                    {isMoney
-                      ? money(resolved?.value ?? null)
-                      : plain(resolved?.value ?? null)}
-                  </strong>
+                  <strong>{resolvedFieldDisplay(resolved, Boolean(isMoney))}</strong>
                   <small
                     data-tone={statusTone(
                       resolved?.status ?? "UNKNOWN",
@@ -437,15 +483,9 @@ export function StockTerminal({
                     {resolved?.status ?? "UNKNOWN"}
                   </small>
 
-                  {fieldEvidenceNote(
-                    resolved,
-                    Boolean(isMoney),
-                  ) && (
+                  {evidenceNote && (
                     <em className="tm-field-evidence-note">
-                      {fieldEvidenceNote(
-                        resolved,
-                        Boolean(isMoney),
-                      )}
+                      {evidenceNote}
                     </em>
                   )}
                 </div>

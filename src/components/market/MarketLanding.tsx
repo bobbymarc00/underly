@@ -301,10 +301,10 @@ export function MarketLanding() {
               Every wrapper.
             </h1>
             <p>
-              Inspect tokenized-equity wrappers as a market,
-              not a black-box score. Compare source evidence,
-              history, company context and wrapper structure
-              without signing a transaction.
+              Inspect multiple tokenized-equity wrappers for one underlying,
+              not a black-box score. Compare exact contracts, provider
+              provenance, company context, and source evidence without signing
+              a transaction.
             </p>
           </div>
           <div className="tm-hero-search">

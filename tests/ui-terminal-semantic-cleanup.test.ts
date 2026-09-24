@@ -26,6 +26,9 @@ describe("stock detail semantic cleanup", () => {
     expect(stock).toContain("fieldEvidenceNote");
     expect(stock).toContain("Provider values disagree");
     expect(stock).toContain("No usable provider value");
+    expect(stock).toContain("NO CONSENSUS");
+    expect(stock).toContain("One usable provider source");
+    expect(stock).toContain("providerLabel(source.provider)");
     expect(stock).toContain("resolved.evidence");
   });
 

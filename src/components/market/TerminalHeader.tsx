@@ -24,13 +24,25 @@ export function TerminalHeader({
         </div>
 
         <nav className="tm-nav" aria-label="Primary navigation">
-          <Link href="/" data-active={active === "markets"}>
+          <Link
+            href="/"
+            data-active={active === "markets"}
+            aria-current={active === "markets" ? "page" : undefined}
+          >
             MARKETS
           </Link>
-          <Link href="/wallet" data-active={active === "wallet"}>
+          <Link
+            href="/wallet"
+            data-active={active === "wallet"}
+            aria-current={active === "wallet" ? "page" : undefined}
+          >
             WALLET
           </Link>
-          <Link href="/inspect" data-active={active === "inspector"}>
+          <Link
+            href="/inspect"
+            data-active={active === "inspector"}
+            aria-current={active === "inspector" ? "page" : undefined}
+          >
             INSPECTOR
           </Link>
         </nav>
